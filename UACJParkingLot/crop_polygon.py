@@ -1,14 +1,16 @@
 import numpy
 from PIL import Image, ImageDraw
 import pickle
-
-def crop_image(image_path, polygon):
-		print(image_path)
+import json
+import os
+from tqdm import tqdm
+def crop_image(image_path, out_image, polygon):
+		#print(image_path)
 		# read image as RGB and add alpha (transparency)
 		# 'C:\\Eduardo\\ProyectoFinal\\Pruebas_UACJ\\30_4\\image30-11-2018_12-35-19.jpg'
 		im = Image.open(image_path).convert("RGBA")
 
-		print(polygon)
+		#print(polygon)
 		# convert to numpy (for convenience)
 		imArray = numpy.asarray(im)
 
@@ -28,13 +30,20 @@ def crop_image(image_path, polygon):
 
 		# back to Image from numpy
 		newIm = Image.fromarray(newImArray, "RGBA")
-		newIm.save("out.png")
+		newIm.save(out_image)
 
 if __name__ == "__main__":
-		image_path = 'C:\\Eduardo\\ProyectoFinal\\Pruebas_UACJ\\30_4\\image30-11-2018_12-35-19.jpg'
-		polygon = [(1482, 767), (1453, 706), (1436, 627), (1425, 593)]
-		#with open(r"polygon.pickle", "rb") as input_file:
-		#		polygon = pickle.load(input_file)
-		print(polygon)
-		crop_image(image_path, polygon)
+		image_path = 'C:\\Eduardo\\ProyectoFinal\\Pruebas_UACJ\\30_4\\image30-11-2018_14-49-19.jpg'
+		destination_path = 'C:\\Eduardo\\ProyectoFinal\\Pruebas_UACJ\\Splited\\30_4\\image30-11-2018_14-49-19'
+		if not os.path.isdir(destination_path):
+				os.mkdir(destination_path)
+		# open output file for reading
+		with open('map_points2.txt', 'r') as filehandle:
+				polygons = json.load(filehandle)
+		count = 0
+		for polygon in tqdm(polygons):
+				polygon = [tuple([x * 3 for x in l]) for l in polygon]
+				crop_image(image_path, os.path.join(destination_path, "{}.png".format(count)), polygon)
+				count += 1
+		#polygon = [(1482, 767), (1453, 706), (1436, 627), (1425, 593)]
 
