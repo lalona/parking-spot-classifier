@@ -8,10 +8,11 @@ def main():
 	print('hola')
 	ap = argparse.ArgumentParser()
 	ap.add_argument('-e', '--error-file', type=str, required=True, help='The path to the file that contains the error images')
-
+	ap.add_argument("-d", "--dataset", type=str, required=True, help='It can be pklot or cnrpark.')
 	args = vars(ap.parse_args())
 
 	error_file = args['error_file']
+	dataset = args['dataset']
 
 	with open(error_file, 'r') as fjson:
 			failed_images = json.load(fjson)
@@ -54,6 +55,17 @@ def main():
 					print("From: {} attrib: {} count: {}".format(key, k, v))
 	print('From total: {}'.format(len(failed_images['image_info'])))
 	print('Total high error image: {}'.format(len(high_error_images)))
+
+	for err_image in high_error_images:
+			print(err_image)
+			image_path = err_image['whole_path']
+			image = cv2.imread(image_path)
+			if dataset == 'cnrpark':
+				cv2.imshow(err_image['filePath'], image)
+			else:
+				cv2.imshow(err_image['filepath'] + "" + err_image['filename'], image)
+			cv2.waitKey(0)
+			cv2.destroyAllWindows()
 
 if __name__ == "__main__":
 		main()

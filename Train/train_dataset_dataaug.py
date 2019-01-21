@@ -15,22 +15,50 @@ import json
 from googlenet import create_googlenet
 from malexnet import mAlexNet
 from datetime import datetime
-
+import pandas as pd
+from keras.callbacks import EarlyStopping, CSVLogger, LearningRateScheduler, Callback
+import math
 IMAGE_HEIGHT = 150
 IMAGE_WIDTH = 150
-IMAGE_CHANNEL = 3
+IMAGE_CHANNEL = 3 
 NUM_CLASSES = 2
 
 labels_file = "C:\\Eduardo\\Level1\\DeepLearning_Keras\\my_code\\ProyectoFinal\\SplittingDataSet\\ReduceDataset\\cnrpark_labels_reduced_comparing-images_60.txt"
 
 # path_patches = "C:/Eduardo/ProyectoFinal/Datasets/CNR-EXT/PATCHES/"
 
-EPOCHS = 20
-INIT_LR = 1e-3
-BATCH_SIZE = 100
+EPOCHS = 21
+INIT_LR = 0.0007 # modificar esto
+BATCH_SIZE = 500
+
+sd=[]
+class LossHistory(Callback):
+		def on_train_begin(self, logs={}):
+				self.losses = []
+				self.lr = []
+
+		def on_epoch_end(self, batch, logs={}):
+				self.losses.append(logs.get('loss'))
+				self.lr.append(step_decay(len(self.losses)))
+
+def step_decay(epoch):
+	initial_lrate = INIT_LR
+	drop = 0.1
+	epochs_drop = 7.0
+	lrate = initial_lrate * math.pow(drop, math.floor((1+epoch)/epochs_drop))
+
+	print('lr: {}'.format(lrate))
+	return lrate
+
+def exp_decay(epoch):
+	initial_lrate = INIT_LR
+	k = 0.1
+	lrate = initial_lrate * math.exp(-k*epoch)
+	print('lr: {}'.format(lrate))
+	return lrate
+
 
 def create_aug_gen(in_gen, image_gen):
-
 	for in_x, in_y in in_gen:
 		g_x = image_gen.flow(255*in_x, batch_size=in_x.shape[0])
 		yield next(g_x)/255.0, in_y
@@ -68,20 +96,22 @@ def main():
 		# construct the argument parse and parse the arguments
 		ap = argparse.ArgumentParser()
 		ap.add_argument("-d", "--dataset", required=True,
-										help="path to input dataset")
+										help="path to input dataset directory")
 
 		args = vars(ap.parse_args())
 
-		dataset_path = args['dataset']
-		train_results_direcotry = os.path.dirname(os.path.abspath(dataset_path))
-		train_results_direcotry = os.path.join(train_results_direcotry, datetime.now().strftime("%d-%m-%Y_H:M"))
+		#dataset_path = args['dataset']
+		dataset_directory = args['dataset']
+		train_results_direcotry = os.path.join(dataset_directory, datetime.now().strftime("%d-%m-%Y_%H-%M"))
+		os.mkdir(train_results_direcotry)
 		print(train_results_direcotry)
 
 		model_path = os.path.join(train_results_direcotry, 'parking_classification.model')
 		plot_path = os.path.join(train_results_direcotry, 'plot.png')
 		train_details_path = os.path.join(train_results_direcotry, 'details.json')
-		with open(dataset_path, "r") as infile:
-				data = json.load(infile)
+		csv_logg_path = os.path.join(train_results_direcotry, 'epochs_log.csv')
+		#with open(dataset_path, "r") as infile:
+				#data = json.load(infile)
 
 
 		# initialize the model
@@ -89,40 +119,54 @@ def main():
 		# model = LeNet.build(width=70, height=70, depth=3, classes=2)
 		model, architecture_name = mAlexNet.build(width=IMAGE_HEIGHT, height=IMAGE_WIDTH, depth=IMAGE_CHANNEL, classes=NUM_CLASSES)
 		# model, arquitecture_name = create_googlenet(width=IMAGE_HEIGHT, height=IMAGE_WIDTH, depth=IMAGE_CHANNEL, classes=NUM_CLASSES)
-		opt = Adam(lr=INIT_LR, decay=INIT_LR / EPOCHS)
+		opt = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=10e-8)
 		model.compile(loss="binary_crossentropy", optimizer=opt,
 									metrics=["accuracy"])
 
-		image_gen = ImageDataGenerator(rotation_range=15,
-																	 width_shift_range=0.1,
-																	 height_shift_range=0.1,
-																	 shear_range=0.01,
+
+		image_gen = ImageDataGenerator(rescale=1./255, rotation_range=45,
+																	 #width_shift_range=0.1,
+																	 #height_shift_range=0.1,
+																	 #shear_range=0.01,
 																	 zoom_range=[0.9, 1.25],
 																	 horizontal_flip=True,
-																	 vertical_flip=False,
-																	 fill_mode='reflect',
-																	 data_format='channels_last',
+																	 vertical_flip=True,
+																	#fill_mode='reflect')
+																	 #data_format='channels_last',
 																	 brightness_range=[0.5, 1.5])
-		train_gen = generator(data['train'])
-		cur_train_gen = create_aug_gen(train_gen, image_gen)
-		test_gen = generator(data['test'])
-		cur_test_gen = create_aug_gen(test_gen, image_gen)
+		#train_gen = generator(data['train'])
+		#cur_train_gen = create_aug_gen(train_gen, image_gen)
+		#test_gen = generator(data['test'])
+		#cur_test_gen = create_aug_gen(test_gen, image_gen)
+		df_train = pd.read_csv(os.path.join(dataset_directory, 'data_paths_train.csv'))
+		df_test = pd.read_csv(os.path.join(dataset_directory, 'data_paths_test.csv'))
+		train_generator = image_gen.flow_from_dataframe(dataframe=df_train, x_col="path", y_col="y", directory=None,
+																									class_mode="categorical", target_size=(IMAGE_WIDTH, IMAGE_HEIGHT), batch_size=BATCH_SIZE)
+		test_generator = image_gen.flow_from_dataframe(dataframe=df_test, x_col="path", y_col="y",
+																										class_mode="categorical", directory=None, target_size=(IMAGE_WIDTH, IMAGE_HEIGHT),
+																										batch_size=BATCH_SIZE)
+
 
 
 		# train the network
 		print("[INFO] training network...")
 		# with open(dataset_path, "rb") as fp:  # Unpickling
 		#		data = pickle.load(fp)
-		with open(dataset_path, "r") as infile:
-				data = json.load(infile)
+		#with open(dataset_path, "r") as infile:
+				#data = json.load(infile)
 
 		print(model.summary())
-
-		H = model.fit_generator(generator=cur_train_gen,
-														validation_data=cur_test_gen,
-														steps_per_epoch=len(data['train']) // BATCH_SIZE,
-														validation_steps=len(data['test']) // BATCH_SIZE,
-														epochs=EPOCHS, verbose=1)
+		early_stop = EarlyStopping(monitor='val_loss', min_delta=0.05, patience=2)
+		history = LossHistory()
+		lrate = LearningRateScheduler(exp_decay)
+		callbacks = [CSVLogger(filename=csv_logg_path, separator=',', append=False)]
+		STEP_SIZE_TRAIN = train_generator.n // train_generator.batch_size
+		STEP_SIZE_VALID = test_generator.n // test_generator.batch_size
+		H = model.fit_generator(generator=train_generator,
+														validation_data=test_generator,
+														steps_per_epoch=STEP_SIZE_TRAIN,
+														validation_steps=STEP_SIZE_VALID,
+														epochs=EPOCHS, verbose=1, callbacks=callbacks)
 		# save the model to disk
 		print("[INFO] serializing network...")
 		model.save(model_path)
@@ -131,6 +175,7 @@ def main():
 		plt.style.use("ggplot")
 		plt.figure()
 		N = EPOCHS
+		print(H.history)
 		plt.plot(np.arange(0, N), H.history["loss"], label="train_loss")
 		plt.plot(np.arange(0, N), H.history["val_loss"], label="val_loss")
 		plt.plot(np.arange(0, N), H.history["acc"], label="train_acc")
@@ -145,7 +190,8 @@ def main():
 				'epochs': str(EPOCHS),
 			 	'batch_size': str(BATCH_SIZE),
 				'image_size': "{}x{}".format(IMAGE_WIDTH, IMAGE_HEIGHT),
-				'arquitecture': architecture_name
+				'arquitecture': architecture_name,
+				'augmented_data': 'True'
 		}
 		with open(os.path.join(train_details_path), 'w') as outfile:
 				json.dump(details, outfile)

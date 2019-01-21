@@ -40,24 +40,23 @@ class mAlexNet:
 		model.add(Conv2D(16, kernel_size=(11, 11), strides=(4, 4), padding="same", input_shape=inputShape))
 		model.add(Activation("relu"))
 		model.add(MaxPooling2D(pool_size=(3, 3), strides=(2, 2)))
-		model.add(Dropout(0.25))
 
 		# second set of CONV => RELU => POOL layers
 		model.add(Conv2D(20, (5, 5), strides=(1, 1), padding="same"))
 		model.add(Activation("relu"))
 		model.add(MaxPooling2D(pool_size=(3, 3), strides=(2, 2)))
-		model.add(Dropout(0.5))
 
 		# third set of CONV => RELU => POOL layers
 		model.add(Conv2D(30, (3, 3), strides=(1, 1), padding="same"))
 		model.add(Activation("relu"))
 		model.add(MaxPooling2D(pool_size=(3, 3), strides=(2, 2)))
-		model.add(Dropout(0.5))
+
 
 		# first (and only) set of FC => RELU layers
 		model.add(Flatten())
 		model.add(Dense(48))
 		model.add(Activation("relu"))
+		model.add(Dropout(0.2))
 
 		# softmax classifier
 		model.add(Dense(classes))

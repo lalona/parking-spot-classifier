@@ -31,6 +31,7 @@ import ntpath
 from keras.utils import to_categorical
 import numpy as np
 import json
+import random
 
 import msvcrt as m
 TRAIN_SIZE = 70
@@ -109,7 +110,7 @@ def main():
 
 		# the dataset filename is gonna be called the same instead of labels it will have dataset
 		dataset_filename = info_filename.replace("labels", "dataset")
-		dataset_directory = ntpath.basename(dataset_filename).split('.')[0] + "_csv"
+		dataset_directory = ntpath.basename(dataset_filename).split('.')[0] + "-balance" + "_csv"
 		subsets_path = "C:\\Eduardo\\ProyectoFinal\\Proyecto\\ProyectoFinal\\Train\\subsets"
 		subsets_path = os.path.join(subsets_path, dataset_directory)
 
@@ -150,6 +151,45 @@ def main():
 				data_path_state = {'path': image_path, 'y': image_info['state']}
 				data_paths[subset].append(data_path_state)
 				subsets[subset].append(image_info)
+
+		empty_count = 0
+		ocuppied_count = 0
+		for train_image in data_paths['train']:
+				if train_image['y'] == '0':
+					empty_count += 1
+				else:
+					ocuppied_count += 1
+		print("Train images empty state: {} occupied state: {}".format(empty_count, ocuppied_count))
+		# si las imagenes en entrenamiento están desbalanceada, esto quiere decir que
+		# tienen más elementos vacios o ocupados, se balancearan de la siguiente forma
+		# en caso de que las imagenes con el espacio vacio sean mayores se pasara el exceso
+		# a las imagenes de prueba
+		# en caso de que las imagenes de espacios ocupados sea mayor, las imagenes de espacios
+		# vacios se aumentara con imagenes del conjunto de entrenamiento
+		if empty_count > ocuppied_count:
+				train_paths = data_paths['train']
+				i = 0
+				while i < (empty_count - ocuppied_count):
+						random_index = random.randint(0, len(train_paths))
+						if train_paths[random_index]['y'] == '0':
+								data_path_state = train_paths.pop(random_index)
+								data_paths['test'].append(data_path_state)
+								image_info = subsets['train'].pop(random_index)
+								subsets['test'].append(image_info)
+								i += 1
+				data_paths['train'] = train_paths
+		elif ocuppied_count > empty_count:
+				test_paths = data_paths['test']
+				i = 0
+				while i < (ocuppied_count - empty_count):
+						random_index = random.randint(0, len(test_paths))
+						if test_paths[random_index]['y'] == '0':
+								data_path_state = test_paths.pop(random_index)
+								data_paths['train'].append(data_path_state)
+								image_info = subsets['test'].pop(random_index)
+								subsets['train'].append(image_info)
+								i += 1
+				data_paths['test'] = test_paths
 
 
 		for key, value in subsets.items():
@@ -193,15 +233,16 @@ def main():
 		toCSV = data_paths['train']
 		keys = toCSV[0].keys()
 		with open(os.path.join(subsets_path, 'data_paths_train.csv'), 'w') as output_file:
-				dict_writer = csv.DictWriter(output_file, fieldnames=keys)
+				dict_writer = csv.DictWriter(output_file, delimiter=',', lineterminator='\n', fieldnames=keys)
+				#dict_writer = csv.DictWriter(output_file, fieldnames=keys)
 				dict_writer.writeheader()
 				dict_writer.writerows(toCSV)
 
 		toCSV2 = data_paths['test']
 		keys2 = toCSV2[0].keys()
 		with open(os.path.join(subsets_path, 'data_paths_test.csv'), 'w') as output_file:
-				#output = csv.DictWriter(open('file3.csv', 'w'), delimiter=',', lineterminator='\n', fieldnames=headers)
-				dict_writer = csv.DictWriter(output_file, fieldnames=keys2)
+				dict_writer = csv.DictWriter(output_file, delimiter=',', lineterminator='\n', fieldnames=keys2)
+
 				dict_writer.writeheader()
 				dict_writer.writerows(toCSV2)
 

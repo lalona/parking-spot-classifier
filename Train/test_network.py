@@ -49,12 +49,13 @@ def main():
 		model_path = args["model"]
 		model = load_model(model_path,custom_objects={'PoolHelper': PoolHelper})
 		model_onlypath, model_filename = os.path.split(model_path)
-		print(os.path.join(model_onlypath, 'error_images_info.txt'))
+		print(os.path.join(model_onlypath, 'error_images_info_pklot_labels.txt'))
 
 		failed_images = {'dataset': images_info_path, 'image_info': []}
 		count = 0
 		good = 0
 		error = 0
+		total_count = 0
 		for image_info in tqdm(images_info_reduced):
 
 				# load the image
@@ -79,7 +80,9 @@ def main():
 				proba = ocuppied if ocuppied > empty else empty
 				label = "{}: {:.2f}%".format(label, proba * 100)
 
-				if (int(image_info['state']) == 0) != (ocuppied < empty):
+
+				#if (int(image_info['state']) == 0) != (ocuppied > empty):
+				if (int(image_info['state']) == 0) != (ocuppied < empty): # esta es la corrrecta
 
 						# draw the label on the image
 						"""
@@ -100,13 +103,24 @@ def main():
 						good += 1
 				count += 1
 				if count == 1000:
-						print("In a total of 1000 error: {}".format(error))
+						por_error = (len(failed_images['image_info']) * 100) / total_count
+						print("In a total of 1000 error: {} total of error images: {} error por.: {}".format(error, len(failed_images['image_info']), por_error))
 						count = 0
 						error = 0
 						good = 0
+				total_count += 1
 
-		print(failed_images)
-		with open(os.path.join(model_onlypath, 'error_images_info.txt'), 'w') as outfile:
+		por_error = (len(failed_images['image_info']) * 100) / len(images_info_reduced)
+
+		print("In a total of {} error: {} error por.: {}".format(len(images_info_reduced), len(
+						failed_images['image_info']), por_error))
+
+		name_labels = ntpath.basename(images_info_path).split('.')[0]
+		test_dir = os.path.join(model_onlypath, 'test_info')
+		if not os.path.isdir(test_dir):
+			os.mkdir(test_dir)
+
+		with open(os.path.join(test_dir, 'error_images_info_{}.txt'.format(name_labels)), 'w') as outfile:
 				json.dump(failed_images, outfile)
 
 
