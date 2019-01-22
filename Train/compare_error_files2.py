@@ -1,0 +1,3 @@
+"""
+Obtener la informacion
+"""
