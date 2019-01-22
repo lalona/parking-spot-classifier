@@ -27,8 +27,8 @@ labels_file = "C:\\Eduardo\\Level1\\DeepLearning_Keras\\my_code\\ProyectoFinal\\
 
 # path_patches = "C:/Eduardo/ProyectoFinal/Datasets/CNR-EXT/PATCHES/"
 
-EPOCHS = 21
-INIT_LR = 5e-3 # modificar esto
+EPOCHS = 25
+INIT_LR = 8e-3 # modificar esto
 BATCH_SIZE = 500
 
 sd=[]
@@ -43,7 +43,7 @@ class LossHistory(Callback):
 
 def step_decay(epoch):
 	initial_lrate = INIT_LR
-	drop = 0.1
+	drop = 0.4
 	epochs_drop = 7.0
 	lrate = initial_lrate * math.pow(drop, math.floor((1+epoch)/epochs_drop))
 	print('lr: {}'.format(lrate))
