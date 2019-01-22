@@ -28,7 +28,7 @@ labels_file = "C:\\Eduardo\\Level1\\DeepLearning_Keras\\my_code\\ProyectoFinal\\
 # path_patches = "C:/Eduardo/ProyectoFinal/Datasets/CNR-EXT/PATCHES/"
 
 EPOCHS = 21
-INIT_LR = 0.0007 # modificar esto
+INIT_LR = 5e-3 # modificar esto
 BATCH_SIZE = 500
 
 sd=[]
@@ -46,7 +46,6 @@ def step_decay(epoch):
 	drop = 0.1
 	epochs_drop = 7.0
 	lrate = initial_lrate * math.pow(drop, math.floor((1+epoch)/epochs_drop))
-
 	print('lr: {}'.format(lrate))
 	return lrate
 
@@ -117,12 +116,11 @@ def main():
 		# initialize the model
 		print("[INFO] compiling model...")
 		# model = LeNet.build(width=70, height=70, depth=3, classes=2)
-		model, architecture_name = mAlexNet.build(width=IMAGE_HEIGHT, height=IMAGE_WIDTH, depth=IMAGE_CHANNEL, classes=NUM_CLASSES)
-		# model, arquitecture_name = create_googlenet(width=IMAGE_HEIGHT, height=IMAGE_WIDTH, depth=IMAGE_CHANNEL, classes=NUM_CLASSES)
-		opt = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=10e-8)
+		# model, architecture_name = mAlexNet.build(width=IMAGE_HEIGHT, height=IMAGE_WIDTH, depth=IMAGE_CHANNEL, classes=NUM_CLASSES)
+		model, arquitecture_name = create_googlenet(width=IMAGE_HEIGHT, height=IMAGE_WIDTH, depth=IMAGE_CHANNEL, classes=NUM_CLASSES)
+		opt = Adam(lr=INIT_LR, beta_1=0.9, beta_2=0.999, epsilon=10e-8)
 		model.compile(loss="binary_crossentropy", optimizer=opt,
 									metrics=["accuracy"])
-
 
 		image_gen = ImageDataGenerator(rescale=1./255, rotation_range=45,
 																	 #width_shift_range=0.1,
@@ -134,10 +132,7 @@ def main():
 																	#fill_mode='reflect')
 																	 #data_format='channels_last',
 																	 brightness_range=[0.5, 1.5])
-		#train_gen = generator(data['train'])
-		#cur_train_gen = create_aug_gen(train_gen, image_gen)
-		#test_gen = generator(data['test'])
-		#cur_test_gen = create_aug_gen(test_gen, image_gen)
+
 		df_train = pd.read_csv(os.path.join(dataset_directory, 'data_paths_train.csv'))
 		df_test = pd.read_csv(os.path.join(dataset_directory, 'data_paths_test.csv'))
 		train_generator = image_gen.flow_from_dataframe(dataframe=df_train, x_col="path", y_col="y", directory=None,
@@ -158,8 +153,8 @@ def main():
 		print(model.summary())
 		early_stop = EarlyStopping(monitor='val_loss', min_delta=0.05, patience=2)
 		history = LossHistory()
-		lrate = LearningRateScheduler(exp_decay)
-		callbacks = [CSVLogger(filename=csv_logg_path, separator=',', append=False)]
+		lrate = LearningRateScheduler(step_decay)
+		callbacks = [CSVLogger(filename=csv_logg_path, separator=',', append=False), history, lrate]
 		STEP_SIZE_TRAIN = train_generator.n // train_generator.batch_size
 		STEP_SIZE_VALID = test_generator.n // test_generator.batch_size
 		H = model.fit_generator(generator=train_generator,

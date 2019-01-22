@@ -81,8 +81,9 @@ def main():
 				label = "{}: {:.2f}%".format(label, proba * 100)
 
 
-				#if (int(image_info['state']) == 0) != (ocuppied > empty):
-				if (int(image_info['state']) == 0) != (ocuppied < empty): # esta es la corrrecta
+				# esto puede cambiar, de pendiendo con que clase empiece data_paths_train
+				if (int(image_info['state']) == 0) != (ocuppied > empty): # si data_paths_train empieza con 1
+				#if (int(image_info['state']) == 0) != (ocuppied < empty): # si data_paths_train empieza con 0
 
 						# draw the label on the image
 						"""
