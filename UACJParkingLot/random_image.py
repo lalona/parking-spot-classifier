@@ -1,7 +1,6 @@
 import os
 
-def get_images_path():
-		path_images = 'C:\\Eduardo\\ProyectoFinal\\Pruebas_UACJ'
+def get_images_path(path_images):
 		images_paths = []
 		for posible_dir in os.listdir(path_images):
 				posible_dir = os.path.join(path_images, posible_dir)
