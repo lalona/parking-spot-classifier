@@ -74,7 +74,7 @@ def create_googlenet(width, height, depth, classes):
 
 		loss3_classifier_act = Activation('softmax', name='prob')(loss3_classifier)
 
-		googlenet = Model(input=input, output=loss3_classifier_act)
+		googlenet = Model(inputs=input, outputs=loss3_classifier_act)
 
 		return [googlenet, 'googlenet']
 

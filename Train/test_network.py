@@ -29,6 +29,8 @@ def main():
 
 
 
+
+
 		args = vars(ap.parse_args())
 
 		images_info_path = args['images_info']
@@ -49,9 +51,8 @@ def main():
 		model_path = args["model"]
 		model = load_model(model_path,custom_objects={'PoolHelper': PoolHelper})
 		model_onlypath, model_filename = os.path.split(model_path)
-		print(os.path.join(model_onlypath, 'error_images_info_pklot_labels.txt'))
 
-		failed_images = {'dataset': images_info_path, 'image_info': []}
+		failed_images = {'dataset': images_info_path, 'error': 0, 'image_info': []}
 		count = 0
 		good = 0
 		error = 0
@@ -82,8 +83,8 @@ def main():
 
 
 				# esto puede cambiar, de pendiendo con que clase empiece data_paths_train
-				if (int(image_info['state']) == 0) != (ocuppied > empty): # si data_paths_train empieza con 1
-				#if (int(image_info['state']) == 0) != (ocuppied < empty): # si data_paths_train empieza con 0
+				#if (int(image_info['state']) == 0) != (ocuppied > empty): # si data_paths_train empieza con 1
+				if (int(image_info['state']) == 0) != (ocuppied < empty): # si data_paths_train empieza con 0
 
 						# draw the label on the image
 						"""
@@ -116,6 +117,7 @@ def main():
 		print("In a total of {} error: {} error por.: {}".format(len(images_info_reduced), len(
 						failed_images['image_info']), por_error))
 
+		failed_images['error'] = por_error
 		name_labels = ntpath.basename(images_info_path).split('.')[0]
 		test_dir = os.path.join(model_onlypath, 'test_info')
 		if not os.path.isdir(test_dir):

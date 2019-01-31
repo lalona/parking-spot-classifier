@@ -58,7 +58,6 @@ def main():
 	images_info_reduced = []
 	image_info_selected = images_info[0]
 	for image_info in tqdm(images_info):
-
 			if date != image_info['date'] or space != image_info['space']:
 					# this happens when the iteration steps into a new space or date
 					# the image is taken

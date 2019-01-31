@@ -18,8 +18,11 @@ from datetime import datetime
 import pandas as pd
 from keras.callbacks import EarlyStopping, CSVLogger, LearningRateScheduler, Callback
 import math
-IMAGE_HEIGHT = 150
-IMAGE_WIDTH = 150
+import keras.backend as K
+import csv
+
+IMAGE_HEIGHT = 200
+IMAGE_WIDTH = 200
 IMAGE_CHANNEL = 3 
 NUM_CLASSES = 2
 
@@ -27,11 +30,12 @@ labels_file = "C:\\Eduardo\\Level1\\DeepLearning_Keras\\my_code\\ProyectoFinal\\
 
 # path_patches = "C:/Eduardo/ProyectoFinal/Datasets/CNR-EXT/PATCHES/"
 
-EPOCHS = 25
-INIT_LR = 8e-3 # modificar esto
+EPOCHS = 4
+INIT_LR = 4e-3 # modificar esto
 BATCH_SIZE = 500
 
 sd=[]
+learning_rates = []
 class LossHistory(Callback):
 		def on_train_begin(self, logs={}):
 				self.losses = []
@@ -41,10 +45,15 @@ class LossHistory(Callback):
 				self.losses.append(logs.get('loss'))
 				self.lr.append(step_decay(len(self.losses)))
 
+class PrintLR(Callback):
+		def on_epoch_end(self, epoch, logs=None):
+				learning_rates.append(K.eval(self.model.optimizer.lr))
+				print(K.eval(self.model.optimizer.lr))
+
 def step_decay(epoch):
 	initial_lrate = INIT_LR
 	drop = 0.4
-	epochs_drop = 7.0
+	epochs_drop = 8.0
 	lrate = initial_lrate * math.pow(drop, math.floor((1+epoch)/epochs_drop))
 	print('lr: {}'.format(lrate))
 	return lrate
@@ -108,7 +117,8 @@ def main():
 		model_path = os.path.join(train_results_direcotry, 'parking_classification.model')
 		plot_path = os.path.join(train_results_direcotry, 'plot.png')
 		train_details_path = os.path.join(train_results_direcotry, 'details.json')
-		csv_logg_path = os.path.join(train_results_direcotry, 'epochs_log.csv')
+		csv_log_path = os.path.join(train_results_direcotry, 'epochs_log.csv')
+		csv_lr_path = os.path.join(train_results_direcotry, 'learning_rates.csv')
 		#with open(dataset_path, "r") as infile:
 				#data = json.load(infile)
 
@@ -116,28 +126,31 @@ def main():
 		# initialize the model
 		print("[INFO] compiling model...")
 		# model = LeNet.build(width=70, height=70, depth=3, classes=2)
-		# model, architecture_name = mAlexNet.build(width=IMAGE_HEIGHT, height=IMAGE_WIDTH, depth=IMAGE_CHANNEL, classes=NUM_CLASSES)
-		model, arquitecture_name = create_googlenet(width=IMAGE_HEIGHT, height=IMAGE_WIDTH, depth=IMAGE_CHANNEL, classes=NUM_CLASSES)
-		opt = Adam(lr=INIT_LR, beta_1=0.9, beta_2=0.999, epsilon=10e-8)
+		#model, architecture_name = mAlexNet.build(width=IMAGE_HEIGHT, height=IMAGE_WIDTH, depth=IMAGE_CHANNEL, classes=NUM_CLASSES)
+		model, architecture_name = create_googlenet(width=IMAGE_HEIGHT, height=IMAGE_WIDTH, depth=IMAGE_CHANNEL, classes=NUM_CLASSES)
+		opt = Adam(lr=INIT_LR, beta_1=0.9, beta_2=0.999, epsilon=10e-8, decay=0.05)
 		model.compile(loss="binary_crossentropy", optimizer=opt,
 									metrics=["accuracy"])
 
-		image_gen = ImageDataGenerator(rescale=1./255, rotation_range=45,
+		image_gen = ImageDataGenerator(rescale=1./255)#, rotation_range=45,
 																	 #width_shift_range=0.1,
 																	 #height_shift_range=0.1,
 																	 #shear_range=0.01,
-																	 zoom_range=[0.9, 1.25],
-																	 horizontal_flip=True,
-																	 vertical_flip=True,
+																	 #zoom_range=[0.9, 1.25],
+																	 #horizontal_flip=True,
+																	 #vertical_flip=True,
 																	#fill_mode='reflect')
 																	 #data_format='channels_last',
-																	 brightness_range=[0.5, 1.5])
+																	 #brightness_range=[0.5, 1.5])
+		image_gen_val = ImageDataGenerator(rescale=1. / 255)
 
 		df_train = pd.read_csv(os.path.join(dataset_directory, 'data_paths_train.csv'))
 		df_test = pd.read_csv(os.path.join(dataset_directory, 'data_paths_test.csv'))
+		print(df_train)
+		print(df_test)
 		train_generator = image_gen.flow_from_dataframe(dataframe=df_train, x_col="path", y_col="y", directory=None,
 																									class_mode="categorical", target_size=(IMAGE_WIDTH, IMAGE_HEIGHT), batch_size=BATCH_SIZE)
-		test_generator = image_gen.flow_from_dataframe(dataframe=df_test, x_col="path", y_col="y",
+		test_generator = image_gen_val.flow_from_dataframe(dataframe=df_test, x_col="path", y_col="y",
 																										class_mode="categorical", directory=None, target_size=(IMAGE_WIDTH, IMAGE_HEIGHT),
 																										batch_size=BATCH_SIZE)
 
@@ -153,8 +166,9 @@ def main():
 		print(model.summary())
 		early_stop = EarlyStopping(monitor='val_loss', min_delta=0.05, patience=2)
 		history = LossHistory()
+		printlr = PrintLR()
 		lrate = LearningRateScheduler(step_decay)
-		callbacks = [CSVLogger(filename=csv_logg_path, separator=',', append=False), history, lrate]
+		callbacks = [CSVLogger(filename=csv_log_path, separator=',', append=False), printlr]#, history, lrate]
 		STEP_SIZE_TRAIN = train_generator.n // train_generator.batch_size
 		STEP_SIZE_VALID = test_generator.n // test_generator.batch_size
 		H = model.fit_generator(generator=train_generator,
@@ -191,6 +205,9 @@ def main():
 		with open(os.path.join(train_details_path), 'w') as outfile:
 				json.dump(details, outfile)
 
+		with open(csv_lr_path, 'w', newline='') as myfile:
+				wr = csv.writer(myfile, quoting=csv.QUOTE_ALL)
+				wr.writerow(learning_rates)
 
 if __name__ == "__main__":
 		main()

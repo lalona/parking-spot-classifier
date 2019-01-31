@@ -32,7 +32,7 @@ from keras.utils import to_categorical
 import numpy as np
 import json
 import random
-
+from save_subdatasets_utils import save_subset
 import msvcrt as m
 TRAIN_SIZE = 70
 TEST_SIZE = 30
@@ -230,11 +230,14 @@ def main():
 		with open(os.path.join(subsets_path, 'data_paths.txt'), 'w') as outfile:
 				json.dump(data_paths, outfile)
 
+		save_subset(data_paths['train'], dataset_directory, 'train')
+		save_subset(data_paths['test'], dataset_directory, 'test')
+		"""
 		toCSV = data_paths['train']
 		keys = toCSV[0].keys()
 		with open(os.path.join(subsets_path, 'data_paths_train.csv'), 'w') as output_file:
-				dict_writer = csv.DictWriter(output_file, delimiter=',', lineterminator='\n', fieldnames=keys)
-				#dict_writer = csv.DictWriter(output_file, fieldnames=keys)
+				#dict_writer = csv.DictWriter(output_file, delimiter=',', lineterminator='\n', fieldnames=keys)
+				dict_writer = csv.DictWriter(output_file, fieldnames=keys)
 				dict_writer.writeheader()
 				dict_writer.writerows(toCSV)
 
@@ -242,10 +245,10 @@ def main():
 		keys2 = toCSV2[0].keys()
 		with open(os.path.join(subsets_path, 'data_paths_test.csv'), 'w') as output_file:
 				dict_writer = csv.DictWriter(output_file, delimiter=',', lineterminator='\n', fieldnames=keys2)
-
+				dict_writer = csv.DictWriter(output_file, fieldnames=keys)
 				dict_writer.writeheader()
 				dict_writer.writerows(toCSV2)
-
+		"""
 
 if __name__ == "__main__":
 		main()

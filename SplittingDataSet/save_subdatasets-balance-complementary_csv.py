@@ -17,8 +17,8 @@ total_size_training_data = 35000
 #total_size_testing_data  =  4000
 
 # this is in porcentage
-size_training_data_cnrpark = 70
-size_test_data_cnrpark = 30
+init_por_training_data = 70
+init_por_test_data = 100 - init_por_training_data
 
 path_carnd_vehicles = 'C:\\Eduardo\\ProyectoFinal\\Datasets\\CarND-Project5\\vehicles'
 path_carnd_nonvehicles = 'C:\\Eduardo\\ProyectoFinal\\Datasets\\CarND-Project5\\non-vehicles'
@@ -33,16 +33,18 @@ def main():
 												help='Path to the file the contains the dictionary with the info of the dataset reduced.')
 	parser.add_argument("-ext", "--extra-dataset", type=str, required=True,
 											help='Complementary dataset choosen for  balance it can be carnd or mio-tcd')
+	parser.add_argument("-d", "--database", type=str, required=True,
+											help='Database it can be cnrpark or pklot')
 	args = vars(parser.parse_args())
 
-
-	cnrpark_info_filename = args["filename"]
+	info_filename = args["filename"]
+	database = args["database"]
 	complementary_dataset = args["extra_dataset"]
 
-	cnrpark_data_paths, cnrpark_subsets_info = getSubsets(cnrpark_info_filename, size_training_data_cnrpark, size_test_data_cnrpark, 'cnrpark')
-	train_set = cnrpark_data_paths['train']
-	test_set = cnrpark_data_paths['test']
-	cnrpark_empty_count, cnrpark_occupied_count = count_quantity_of_classes(cnrpark_data_paths['train'])
+	data_paths, subsets_info = getSubsets(info_filename, init_por_training_data, init_por_test_data, database)
+	train_set = data_paths['train']
+	test_set = data_paths['test']
+	empty_count, occupied_count = count_quantity_of_classes(data_paths['train'])
 
 	if complementary_dataset == 'carnd':
 			complementary_vehicles_path = path_carnd_vehicles
@@ -61,8 +63,8 @@ def main():
 	total_size_training_data_empty = int(total_size_training_data / 2)
 	total_size_training_data_occupied = int(total_size_training_data / 2)
 
-	missing_training_data_empty = total_size_training_data_empty - cnrpark_empty_count
-	missing_training_data_occupied = total_size_training_data_occupied - cnrpark_occupied_count
+	missing_training_data_empty = total_size_training_data_empty - empty_count
+	missing_training_data_occupied = total_size_training_data_occupied - occupied_count
 
 	random.shuffle(complementary_nonvehicles_data)
 	for i in range(missing_training_data_empty):
@@ -74,11 +76,11 @@ def main():
 	random.shuffle(train_set)
 	random.shuffle(test_set)
 
-	cnrpark_filename = ntpath.basename(cnrpark_info_filename).split('.')[0]
-	subset_dir = cnrpark_filename + '-{}v-{}nv_complementary-{}-{}v-{}nv'.format(cnrpark_occupied_count, cnrpark_empty_count, complementary_dataset, missing_training_data_occupied, missing_training_data_empty)
+	filename = ntpath.basename(info_filename).split('.')[0]
+	subset_dir = filename + '-{}v-{}nv_complementary-{}-{}v-{}nv'.format(occupied_count, empty_count, complementary_dataset, missing_training_data_occupied, missing_training_data_empty)
 	create_subset_directorie(subset_dir)
 
-	saveSubsetsInfo(subsets=cnrpark_subsets_info, subsets_dir=subset_dir, database='cnrpark',
+	saveSubsetsInfo(subsets=subsets_info, subsets_dir=subset_dir, database=database,
 										extra_info='Training subset complemented with {} vehicles {} and nonvehicles {}'.format(complementary_dataset, missing_training_data_occupied, missing_training_data_empty))
 
 	save_subset(subset=train_set, subsets_dir=subset_dir, type='train')
