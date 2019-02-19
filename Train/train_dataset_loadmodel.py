@@ -12,28 +12,30 @@ import argparse
 import cv2
 import os
 import json
-from googlenet import create_googlenet
-#from orig_googlenet import create_googlenet
+#from mgooglenet import create_googlenet
 from malexnet import mAlexNet
+from mmobilenet import mMobileNet
+from mXception import Xception
 from datetime import datetime
 import pandas as pd
 from keras.callbacks import EarlyStopping, CSVLogger, LearningRateScheduler, Callback
 import math
 import keras.backend as K
 import csv
-
+from keras.models import load_model
+from keras.applications import InceptionV3
 IMAGE_HEIGHT = 200
 IMAGE_WIDTH = 200
-IMAGE_CHANNEL = 3 
+IMAGE_CHANNEL = 3
 NUM_CLASSES = 2
 
 labels_file = "C:\\Eduardo\\Level1\\DeepLearning_Keras\\my_code\\ProyectoFinal\\SplittingDataSet\\ReduceDataset\\cnrpark_labels_reduced_comparing-images_60.txt"
 
 # path_patches = "C:/Eduardo/ProyectoFinal/Datasets/CNR-EXT/PATCHES/"
 
-EPOCHS = 4
-INIT_LR = 4e-3 # modificar esto
-BATCH_SIZE = 500
+EPOCHS = 1
+INIT_LR = 1e-3 # modificar esto
+BATCH_SIZE = 80
 
 sd=[]
 learning_rates = []
@@ -106,12 +108,21 @@ def main():
 		ap = argparse.ArgumentParser()
 		ap.add_argument("-d", "--dataset", required=True,
 										help="path to input dataset directory")
+		ap.add_argument("-m", "--model", required=True,
+										help="path to trained model model")
 
 		args = vars(ap.parse_args())
 
 		#dataset_path = args['dataset']
 		dataset_directory = args['dataset']
-		train_results_direcotry = os.path.join(dataset_directory, datetime.now().strftime("%d-%m-%Y_%H-%M"))
+		model_path = args['model']
+
+		# initialize the model
+		print("[INFO] loading model...")
+		model = load_model(model_path)
+
+		model_onlypath, model_filename = os.path.split(model_path)
+		train_results_direcotry = os.path.join(model_onlypath, datetime.now().strftime("%d-%m-%Y_%H-%M"))
 		os.mkdir(train_results_direcotry)
 		print(train_results_direcotry)
 
@@ -124,11 +135,9 @@ def main():
 				#data = json.load(infile)
 
 
-		# initialize the model
-		print("[INFO] compiling model...")
-		# model = LeNet.build(width=70, height=70, depth=3, classes=2)
-		#model, architecture_name = mAlexNet.build(width=IMAGE_HEIGHT, height=IMAGE_WIDTH, depth=IMAGE_CHANNEL, classes=NUM_CLASSES)
-		model, architecture_name = create_googlenet(width=IMAGE_HEIGHT, height=IMAGE_WIDTH, depth=IMAGE_CHANNEL, classes=NUM_CLASSES)
+
+
+
 		opt = Adam(lr=INIT_LR, beta_1=0.9, beta_2=0.999, epsilon=10e-8, decay=0.05)
 		model.compile(loss="binary_crossentropy", optimizer=opt,
 									metrics=["accuracy"])
@@ -147,8 +156,6 @@ def main():
 
 		df_train = pd.read_csv(os.path.join(dataset_directory, 'data_paths_train.csv'))
 		df_test = pd.read_csv(os.path.join(dataset_directory, 'data_paths_test.csv'))
-		print(df_train)
-		print(df_test)
 		train_generator = image_gen.flow_from_dataframe(dataframe=df_train, x_col="path", y_col="y", directory=None,
 																									class_mode="categorical", target_size=(IMAGE_WIDTH, IMAGE_HEIGHT), batch_size=BATCH_SIZE)
 		test_generator = image_gen_val.flow_from_dataframe(dataframe=df_test, x_col="path", y_col="y",
@@ -172,6 +179,7 @@ def main():
 		callbacks = [CSVLogger(filename=csv_log_path, separator=',', append=False), printlr]#, history, lrate]
 		STEP_SIZE_TRAIN = train_generator.n // train_generator.batch_size
 		STEP_SIZE_VALID = test_generator.n // test_generator.batch_size
+
 		H = model.fit_generator(generator=train_generator,
 														validation_data=test_generator,
 														steps_per_epoch=STEP_SIZE_TRAIN,
@@ -200,7 +208,7 @@ def main():
 				'epochs': str(EPOCHS),
 			 	'batch_size': str(BATCH_SIZE),
 				'image_size': "{}x{}".format(IMAGE_WIDTH, IMAGE_HEIGHT),
-				'arquitecture': architecture_name,
+				'arquitecture': '',
 				'augmented_data': 'True'
 		}
 		with open(os.path.join(train_details_path), 'w') as outfile:

@@ -12,28 +12,29 @@ import argparse
 import cv2
 import os
 import json
-from googlenet import create_googlenet
-#from orig_googlenet import create_googlenet
+from mgooglenetv9 import create_googlenet
 from malexnet import mAlexNet
+from mmobilenet import mMobileNet
+from mXceptionv2 import Xception
 from datetime import datetime
 import pandas as pd
 from keras.callbacks import EarlyStopping, CSVLogger, LearningRateScheduler, Callback
 import math
 import keras.backend as K
 import csv
-
+from keras.applications import InceptionV3
 IMAGE_HEIGHT = 200
 IMAGE_WIDTH = 200
-IMAGE_CHANNEL = 3 
+IMAGE_CHANNEL = 3
 NUM_CLASSES = 2
 
 labels_file = "C:\\Eduardo\\Level1\\DeepLearning_Keras\\my_code\\ProyectoFinal\\SplittingDataSet\\ReduceDataset\\cnrpark_labels_reduced_comparing-images_60.txt"
 
 # path_patches = "C:/Eduardo/ProyectoFinal/Datasets/CNR-EXT/PATCHES/"
 
-EPOCHS = 4
+EPOCHS = 2
 INIT_LR = 4e-3 # modificar esto
-BATCH_SIZE = 500
+BATCH_SIZE = 350
 
 sd=[]
 learning_rates = []
@@ -128,7 +129,11 @@ def main():
 		print("[INFO] compiling model...")
 		# model = LeNet.build(width=70, height=70, depth=3, classes=2)
 		#model, architecture_name = mAlexNet.build(width=IMAGE_HEIGHT, height=IMAGE_WIDTH, depth=IMAGE_CHANNEL, classes=NUM_CLASSES)
-		model, architecture_name = create_googlenet(width=IMAGE_HEIGHT, height=IMAGE_WIDTH, depth=IMAGE_CHANNEL, classes=NUM_CLASSES)
+		#model, architecture_name = create_googlenet(width=IMAGE_HEIGHT, height=IMAGE_WIDTH, depth=IMAGE_CHANNEL, classes=NUM_CLASSES)
+		#model, architecture_name = mMobileNet(width=IMAGE_HEIGHT, height=IMAGE_WIDTH, depth=IMAGE_CHANNEL)
+		model, architecture_name = Xception(width=IMAGE_HEIGHT, height=IMAGE_WIDTH, depth=IMAGE_CHANNEL, classes=NUM_CLASSES)
+		#model = InceptionV3()
+
 		opt = Adam(lr=INIT_LR, beta_1=0.9, beta_2=0.999, epsilon=10e-8, decay=0.05)
 		model.compile(loss="binary_crossentropy", optimizer=opt,
 									metrics=["accuracy"])
@@ -147,8 +152,6 @@ def main():
 
 		df_train = pd.read_csv(os.path.join(dataset_directory, 'data_paths_train.csv'))
 		df_test = pd.read_csv(os.path.join(dataset_directory, 'data_paths_test.csv'))
-		print(df_train)
-		print(df_test)
 		train_generator = image_gen.flow_from_dataframe(dataframe=df_train, x_col="path", y_col="y", directory=None,
 																									class_mode="categorical", target_size=(IMAGE_WIDTH, IMAGE_HEIGHT), batch_size=BATCH_SIZE)
 		test_generator = image_gen_val.flow_from_dataframe(dataframe=df_test, x_col="path", y_col="y",
@@ -172,6 +175,7 @@ def main():
 		callbacks = [CSVLogger(filename=csv_log_path, separator=',', append=False), printlr]#, history, lrate]
 		STEP_SIZE_TRAIN = train_generator.n // train_generator.batch_size
 		STEP_SIZE_VALID = test_generator.n // test_generator.batch_size
+
 		H = model.fit_generator(generator=train_generator,
 														validation_data=test_generator,
 														steps_per_epoch=STEP_SIZE_TRAIN,

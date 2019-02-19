@@ -1,6 +1,7 @@
 
 
 _convout1_f = K.function(inputs, [leNet.convout1.output])
+
 def convout1_f(X):
     # The [0] is to disable the training phase flag
     return _convout1_f([0] + [X])

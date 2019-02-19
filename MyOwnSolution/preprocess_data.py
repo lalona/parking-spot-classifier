@@ -36,11 +36,12 @@ def getSubsetsSpaces(dataset_unprocess, train_por=TRAIN_POR, test_por=TEST_POR, 
 			parkinglot_count += 1
 	return {'train': train_subset, 'test': test_subset}
 
-def getSubsets(dataset_unprocess, subset_spaces, to_categorical_flag=False):
+def getSubsets(dataset_unprocess, subset_spaces, to_categorical_flag=False, brightness_feature=True):
 		methods = getMethods()
 		features = [m['name'] for m in methods]
-		extra_features = ['comparing_with_brig', 'comparing_to_brig']
-		features.extend(extra_features)
+		if brightness_feature:
+			extra_features = ['comparing_with_brig', 'comparing_to_brig']
+			features.extend(extra_features)
 
 		print(subset_spaces)
 

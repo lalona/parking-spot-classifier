@@ -13,7 +13,7 @@ import random
 import ntpath
 
 
-total_size_training_data = 35000
+total_size_training_data = 40000
 #total_size_testing_data  =  4000
 
 # this is in porcentage

@@ -152,7 +152,7 @@ def getMethods():
 			{'name': 'pixel_sim', 'callback': pixel_sim, 'normal_exposure': True},
 			#{'name': 'sift_sim', 'callback': sift_sim},
 			{'name': 'emd', 'callback': earth_movers_distance, 'normal_exposure': True},
-			{'name': 'mse', 'callback': mse},
+			#{'name': 'mse', 'callback': mse},
 			{'name': 'nrmse', 'callback': nrmse}
 	]
 	return methods

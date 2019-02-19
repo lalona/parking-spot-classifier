@@ -93,6 +93,26 @@ def getSubsets(info_filename, train_size, test_size, database):
 
 		return (data_paths, subsets_info)
 
+
+def getSubsets_TestOnly(info_filename, database):
+		getImagePath = getImagePathCnrpark if database == 'cnrpark' else getImagePathPklot
+		with open(info_filename, "rb") as fp:  # Unpickling
+				images_info_reduced = pickle.load(fp)
+
+		# For each day i would select randoms spaces for each subset (training, validation)
+		images_info_reduced.sort(key=lambda x: x['date'])
+		data_paths = []
+		subsets_info = {'train': [], 'test': []}
+
+		for image_info in tqdm(images_info_reduced):
+				image_path = getImagePath(image_info)
+				data_path_state = {'path': image_path, 'y': image_info['state']}
+				data_paths.append(data_path_state)
+				subsets_info['test'].append(image_info)
+
+		return (data_paths, subsets_info)
+
+
 def count_quantity_of_classes(data_paths):
 		empty_count = 0
 		occupied_count = 0

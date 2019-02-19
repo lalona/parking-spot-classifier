@@ -4,7 +4,7 @@ para entrenamiento, validación y prueba. Se hace en cada fecha porque
 las imagenes de un espacio tomada por una camara en cierto día, en sus diferentes
 horarios no pueden aparecer en más de uno de los tres subconjuntos (entrenamiento, validacion y prueba)
 esto se debe a que las imagenes para un espacio en los diferentes horarios pueden contener
-el mismo automovil y ser muy similares, lo que provocaria que se estaria probando o validando con imagenes
+el mismo automovil y ser muy similares, lo que provocaria que se estaria probando o haciendo validaciones con imagenes
 muy similares a las usadas en el entrenamiento.
 
 Sabiendo que imagenes corresponden a cada subconjunto entonces se carga la imagen usando cv2 se le hace un resize

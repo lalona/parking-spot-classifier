@@ -105,6 +105,7 @@ def main():
 
 		print(model.summary())
 
+		"""
 		H = model.fit_generator(generator=generator(data=data['train'], batch_size=BS),
 														validation_data=generator(data=data['test'], batch_size=BS), steps_per_epoch=len(data['train']) // BS,
 														validation_steps=len(data['test']) // BS,
@@ -126,7 +127,7 @@ def main():
 		plt.ylabel("Loss/Accuracy")
 		plt.legend(loc="lower left")
 		plt.savefig(args["plot"])
-
+		"""
 
 if __name__ == "__main__":
 		main()

@@ -3,33 +3,29 @@ import argparse
 import os
 import json
 import ntpath
-from preprocess_data import getSubsetsSpaces, getSubsets,getNormalizedX
+from preprocess_data import getSubsetsSpaces, getSubsets
 from tqdm import tqdm
-from compare_images_methods2 import getMethods
 from keras.models import load_model
 import numpy as np
+from skimage.io import imread
+from skimage.transform import resize
+import matplotlib.pyplot as plt
+from keras.preprocessing.image import load_img, img_to_array
 
-def getSubsets_info(dataset_unprocess, brightness_feature=True):
-		methods = getMethods()
-		features = [m['name'] for m in methods]
-		if brightness_feature:
-			extra_features = ['comparing_with_brig', 'comparing_to_brig']
-			features.extend(extra_features)
+IMG_HEIGHT = 200
+IMG_WIDTH = 200
+def getSubsets_info(dataset_unprocess):
 
-		dataset_info = {'X': [], 'Y': [], 'data': []}
+		dataset_info = []
 		for parkinglot, spaces in dataset_unprocess.items():
 				for space, spaces_comparisions in tqdm(spaces.items()):
 						for data in spaces_comparisions:
-								x = []
-								for feature, value in data.items():
-										if feature in features:
-												x.append(value)
-								dataset_info['X'].append(x)
-								dataset_info['Y'].append(int(data['state']))
-								dataset_info['data'].append(data)
-
-		X = getNormalizedX(dataset_info['X'])
-		dataset_info['X'] = np.array(X).astype("float32")
+								data_ = {}
+								data_['X1'] = (data['comparing_with'])
+								data_['X2'] = (data['comparing_to'])
+								data_['Y'] = (int(data['state']))
+								data_['data'] = (data)
+								dataset_info.append(data_)
 		return dataset_info
 
 def main():
@@ -38,15 +34,12 @@ def main():
 												help='Path to the neural net trained.')
 		parser.add_argument("-d", "--dataset", type=str, required=True,
 												help='Path to dataset.')
-		parser.add_argument("-b", "--brightness", type=bool, required=False,
-												help='Include brightness.')
 
 		args = vars(parser.parse_args())
 
 		model_path = args["model"]
 		dataset_path = args["dataset"]
-		brightness = args["brightness"]
-		brightness = False
+
 		model = load_model(model_path)
 
 		with open(dataset_path) as f:
@@ -58,18 +51,45 @@ def main():
 		if not os.path.isdir(test_dir):
 			os.mkdir(test_dir)
 
-		dataset_info = getSubsets_info(dataset, brightness_feature=brightness)
+		dataset_info = getSubsets_info(dataset)
 		failed_data = []
 		count = 0
 		total_count = 0
-		for x, y, data in zip(dataset_info['X'], dataset_info['Y'], dataset_info['data']):
-			x = np.expand_dims(x, axis=0)
-			(ocuppied, empty) = model.predict(x)[0]
 
-			#predicted_y = svm_classifier.predict([x])[0]
-			if (y == 0) != (ocuppied > empty):
+		ave = np.zeros(3)
+		std = np.zeros(3) + 1
+		X_img = []
+		X_img_compare = []
+
+		img_file = ''
+		for data_info  in tqdm(dataset_info):
+			X_img = []
+			X_img_compare = []
+			if img_file != data_info['X1']:
+				img_file = data_info['X1']
+				img = load_img(img_file, target_size=(IMG_WIDTH, IMG_HEIGHT))
+				x = img_to_array(img)
+
+
+			img_file_compare = data_info['X2']
+			y = data_info['Y']
+			data = data_info['data']
+
+			img_compare = load_img(img_file_compare, target_size=(IMG_WIDTH, IMG_HEIGHT))
+			x2 = img_to_array(img_compare)
+
+			X_img.append(x)
+			X_img_compare.append(x2)
+			X_img = np.array(X_img, dtype="float") / 255.0
+			X_img_compare = np.array(X_img_compare, dtype="float") / 255.0
+			X = [X_img, X_img_compare]
+			#x = np.expand_dims(x, axis=0)
+			(ocuppied, empty) = model.predict(X)[0]
+
+			# predicted_y = svm_classifier.predict([x])[0]
+			if (y == 1) != (ocuppied > empty):
 					failed_data.append(data)
-			if count == 10000:
+			if count == 1000:
 					print('From {} {} failed err % {}'.format(total_count, len(failed_data), len(failed_data) * 100 / total_count))
 					count = 0
 			count += 1
