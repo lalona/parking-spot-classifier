@@ -61,6 +61,7 @@ def main():
 				elif image_info_selected['state'] != image_info['state']:
 						images_info_reduced.append(image_info)
 						image_info_selected = image_info
+
 				count -= 1
 
 		print("Original size: {} Reduced size: {}".format(len(images_info), len(images_info_reduced)))

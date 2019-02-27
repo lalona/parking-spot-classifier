@@ -89,6 +89,35 @@ def getDataset(images_info_by_patkinglot, specific_database):
 		return (dataset, dataset_name)
 
 
+def getDatasetCar(images_info_by_patkinglot, specific_database):
+		"""
+		:param images_info_by_patkinglot: the raw info of
+		:param database: pklot or cnrpark
+		:return:
+		"""
+		dataset = {}
+		for parkinglot, images_info_by_spaces in images_info_by_patkinglot.items():
+				dataset[parkinglot] = {}
+				for space, images_info_of_space in images_info_by_spaces.items():
+						dataset[parkinglot][space] = []
+						empty_space_filepath = ''
+						example_list = images_info_of_space
+						for example in tqdm(example_list):
+								if example['state'] == '1' and len(empty_space_filepath) == 0:
+										empty_space_filepath = example['filepath']
+										break
+						for example in tqdm(example_list):
+								comparision_space_filepath = example['filepath']
+								# if comparision_space_filepath == empty_space_filepath:
+								#		continue
+								info = {'comparing_with': empty_space_filepath, 'comparing_to': comparision_space_filepath,
+												'state': example['state']}
+								dataset[parkinglot][space].append(info)
+		dataset_name = 'dataset_compoccupied_{}'.format(specific_database)
+		dataset_name += '.json'
+		return (dataset, dataset_name)
+
+
 def getDataset_ForTests1(images_info_by_patkinglot, specific_database, empty_spaces=1):
 		"""
 		:param images_info_by_patkinglot: the raw info of

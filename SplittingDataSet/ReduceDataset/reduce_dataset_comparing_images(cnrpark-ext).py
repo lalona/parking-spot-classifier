@@ -29,6 +29,7 @@ import cv2
 from skimage.measure import compare_ssim as ssim
 import pickle
 import datetime
+import msvcrt
 path_labels = "C:\\Eduardo\\ProyectoFinal\\Datasets\\CNR-EXT\\LABELS\\"
 path_patches = "C:/Eduardo/ProyectoFinal/Datasets/CNR-EXT/PATCHES/"
 
@@ -96,6 +97,9 @@ def main():
 						if (s * 100) < porcentage_similarity:
 								image_info_selected = image_info
 								images_info_reduced.append(image_info_selected)
+						print('{} vs {}'.format(image_info_selected['filePath'], image_info['filePath']))
+						print('result: {}'.format(s * 100))
+						msvcrt.getch()
 
 		print("Original size: {} Reduced size: {}".format(len(images_info), len(images_info_reduced)))
 

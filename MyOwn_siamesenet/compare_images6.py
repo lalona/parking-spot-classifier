@@ -67,7 +67,7 @@ def main():
 
 		#dataset, dataset_name = getDataset2(images_info_by_patkinglot, database=database, specific_database=specific_database, empty_spaces_by_space=50, half_total_comparisions=50)
 		#dataset, dataset_name = getDataset7(images_info_by_patkinglot, specific_database=specific_database)
-		dataset, dataset_name = getDataset4_1(images_info, database=database, specific_database=specific_database, compare_to=2)
+		dataset, dataset_name = getDataset4_1(images_info, database=database, specific_database=specific_database, compare_to=4)
 
 		with open(dataset_name, 'w') as outfile:
 				json.dump(dataset, outfile)

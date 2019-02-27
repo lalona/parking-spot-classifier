@@ -20,7 +20,7 @@ import numpy as np
 from tqdm import tqdm
 import ntpath
 import json
-from compare_image_utils import get_images_info_by_parkinglot, getDataset, getDataset2
+from compare_image_utils import get_images_info_by_parkinglot, getDataset, getDataset2, getDatasetCar
 import ntpath
 path_pklot = 'C:\\Eduardo\\ProyectoFinal\\Datasets\\PKLot'
 
@@ -63,7 +63,7 @@ def main():
 		# Mostrar en una ventana el espacio vacio y en la otra la comparacion y el resultado
 
 
-		dataset, dataset_name = getDataset(images_info_by_patkinglot, specific_database=specific_database)
+		dataset, dataset_name = getDatasetCar(images_info_by_patkinglot, specific_database=specific_database)
 
 		with open(dataset_name, 'w') as outfile:
 				json.dump(dataset, outfile)

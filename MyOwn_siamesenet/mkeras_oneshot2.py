@@ -16,6 +16,8 @@ import matplotlib.pyplot as plt
 import csv
 
 from keras.preprocessing.image import load_img, img_to_array
+import random
+
 INIT_LR = 2e-3
 EPOCHS = 1
 BATCH_SIZE = 50
@@ -122,6 +124,17 @@ def createSiameseNet(width, height, depth, classes, lr):
 		siamese_net.compile(loss="binary_crossentropy", optimizer=optimizer, metrics=["accuracy"])
 		return siamese_net, 'siamese_net'
 
+
+def getMapLabel(df):
+		map_label = dict()
+		for index, row in df.iterrows():
+				y = row['y']
+				img_path = row['path']
+				if y not in map_label:
+						map_label[y] = []
+				map_label[y].append(img_path)
+		return map_label
+
 # https://github.com/keras-team/keras/issues/8130
 class DataGenerator(keras.utils.Sequence):
 		"""Generates data for Keras."""
@@ -176,6 +189,30 @@ class DataGenerator(keras.utils.Sequence):
 				if self.shuffle == True:
 						np.random.shuffle(self.indexes)
 
+		def _get_siamese_similar_pair(self):
+				label = random.choice(self.unique_train_label)
+				print(label)
+				l, r = random.sample(self.map_train_label[label], 2)
+				return getImage(l), getImage(r), 1
+
+		def _get_siamese_dissimilar_pair(self):
+				# print(len(self.unique_train_label))
+				while True:
+						label_l, label_r = random.sample(self.unique_train_label, 2)
+						if label_l != label_r:
+								break
+				print('{} {}'.format(label_l, label_r))
+				# label_l, label_r = self.unique_train_label
+				l = random.choice(self.map_train_label[label_l])
+				r = random.choice(self.map_train_label[label_r])
+				return getImage(l), getImage(r), 0
+
+		def _get_siamese_pair(self):
+				if np.random.random() < 0.5:
+						return self._get_siamese_similar_pair()
+				else:
+						return self._get_siamese_dissimilar_pair()
+
 		def __data_generation(self, img_files_temp):
 				"""Generates data containing batch_size samples."""
 				# X : (n_samples, *dim, n_channels)
@@ -192,25 +229,6 @@ class DataGenerator(keras.utils.Sequence):
 						x = img_to_array(img)
 						img_compare = load_img(img_file_compare, target_size=self.dim)
 						x2 = img_to_array(img_compare)
-
-						""" 
-						# Read image
-						img = imread(img_file)
-						# Resize
-						img = resize(img, output_shape=self.dim, mode='constant', preserve_range=True)
-
-						# Read image
-						img_compare = imread(img_file_compare)
-						# Resize
-						img_compare = resize(img_compare, output_shape=self.dim, mode='constant', preserve_range=True)
-
-						# Normalization
-						for ch in range(self.n_channels):
-								img[:, :, ch] = (img[:, :, ch] - self.ave[ch]) / self.std[ch]
-
-						for ch2 in range(self.n_channels):
-								img_compare[:, :, ch2] = (img_compare[:, :, ch2] - self.ave[ch2]) / self.std[ch2]
-						"""
 						X_img.append(x)
 						X_img_compare.append(x2)
 						y[i] = img_files['Y']
@@ -218,6 +236,12 @@ class DataGenerator(keras.utils.Sequence):
 				X_img_compare = np.array(X_img_compare, dtype="float") / 255.0
 				X = [X_img, X_img_compare]
 				return X, keras.utils.to_categorical(y, num_classes=self.n_classes)
+
+		def getImage(img_path):
+				img = load_img(img_path, target_size=self.dim)
+				x = img_to_array(img)
+				return x
+
 
 def main():
 	parser = argparse.ArgumentParser(description='Select the type of reduced.')
