@@ -18,6 +18,8 @@ import msvcrt as m
 IMG_HEIGHT = 200
 IMG_WIDTH = 200
 
+#python test_network101.py -m C:\Eduardo\ProyectoFinal\Proyecto\ProyectoFinal\Train\test_folder\02-28\cnrpark_labels_reduced_comparing-images_70-15576v-13918nv_complementary-mio-td-1924v-3582nv_mgv8\parking_classification.model -d C:\Eduardo\ProyectoFinal\Proyecto\ProyectoFinal\MyOwn_siamesenet\dataset_comp_pklot_labels_reduced_comparing-images_50.json
+
 
 def createErrorFile(test_dir, name_labels, failed_images, distance_param, layer_name):
 		err_file = os.path.join(os.getcwd(), test_dir, 'error_images_info_101_{}_{}_{}.txt'.format(distance_param, layer_name, name_labels))
@@ -105,14 +107,14 @@ def main():
 		img_file_e = ''
 		img_file_o = ''
 		model.summary()
-		layer_name = 'avg_pool'
+		layer_name = 'dense_1'
 		intermediate_layer_model = Model(inputs=model.input,
 																		 outputs=model.get_layer(layer_name).output)
 
-		distance_param ='hamming'
+		distance_param ='cityblock'
 		test_info = {'model_path': model_path, 'dataset_path': dataset_path, 'layer_name': layer_name, 'error': 0, 'failed_data': []}
 
-		for data_info  in tqdm(dataset_info):
+		for data_info  in tqdm(reversed(dataset_info)):
 			if img_file_e != data_info['X1_e']:
 				img_file_e = data_info['X1_e']
 				img_file_o = data_info['X1_o']
@@ -128,9 +130,10 @@ def main():
 			dist_o = cdist(pred2, pred3, distance_param)
 			# predicted_y = svm_classifier.predict([x])[0]
 			#print("dist: {} state: {}".format(dist, y))
-			if dist_e > dist_o and y == 0:
+
+			if dist_e >= dist_o and y == 0:
 				failed_data.append(data)
-			if dist_o > dist_e and y == 1:
+			if dist_o >= dist_e and y == 1:
 				failed_data.append(data)
 
 			"""

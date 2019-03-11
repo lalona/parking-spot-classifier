@@ -11,7 +11,7 @@ def getMinMax(comparissions_results, comparing_with):
 		min_ = 0.0
 		for c in comparissions_results:
 				if c['comparing_to'] == comparing_with:
-						print('yeah')
+						#print('yeah')
 						min_ = c['pred_similarity']
 						break
 		max_ = comparissions_results[-1]['pred_similarity']
@@ -68,7 +68,7 @@ def main():
 				occupied_min, occupied_max = getMinMax(occupied_comparissions_results, occupied_comparing_with)
 				empty_min, empty_max = getMinMax(empty_comparissions_results, empty_comparing_with)
 
-				print('{} {}  {} {}'.format(occupied_min, occupied_max, empty_min, empty_max))
+				#print('{} {}  {} {}'.format(occupied_min, occupied_max, empty_min, empty_max))
 				count = 0
 				failed_empty = 0
 				failed_occupied = 0
@@ -85,11 +85,14 @@ def main():
 								failed_occupied += 1
 						if not empty_prediction_check:
 								failed_empty += 1
-
-						if occupied_pred_value > empty_pred_value and occupied_c['similarity'] == 0:
+						#print('{} {}'.format(occupied_pred_value, empty_pred_value))
+						if occupied_pred_value >= empty_pred_value and occupied_c['similarity'] == 0:
 								failed_same += 1
-						if occupied_pred_value < empty_pred_value and occupied_c['similarity'] == 1:
+						if occupied_pred_value <= empty_pred_value and occupied_c['similarity'] == 1:
 								failed_same += 1
+						if count 1000:
+								print('Total err same: {} {} {}'.format(total_failed_same * 100 / total_count, total_count,
+																												total_failed_same))
 						#if not occupied_prediction_check and not empty_prediction_check:
 						#		failed_same += 1
 

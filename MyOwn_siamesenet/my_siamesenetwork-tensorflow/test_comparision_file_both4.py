@@ -64,9 +64,9 @@ def main():
 						empty_pred_value = getAproximation(c=empty_c)
 
 						count += 1
-						if occupied_pred_value < empty_pred_value and occupied_c['similarity'] == 0:
+						if occupied_pred_value <= empty_pred_value and occupied_c['similarity'] == 0:
 								failed += 1
-						if occupied_pred_value > empty_pred_value and occupied_c['similarity'] == 1:
+						if occupied_pred_value >= empty_pred_value and occupied_c['similarity'] == 1:
 								failed += 1
 						#m.getch()
 				errors.append(failed * 100 / count)
