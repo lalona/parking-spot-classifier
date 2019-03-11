@@ -24,6 +24,7 @@ def main():
 		total_failed_t = 0
 		e_count = 0
 		o_count = 0
+		errors = []
 		for comparing_with, comparissions_results in comparission_values.items():
 				comparissions_results = sorted(comparissions_results, key=itemgetter('pred_similarity'))
 				min_ = 0.0
@@ -35,7 +36,6 @@ def main():
 
 				count = 0
 				failed = 0
-				count_t = 0
 				failed_t = 0
 				for c in comparissions_results:
 						min_approximation = c['pred_similarity'] - min_
@@ -57,8 +57,8 @@ def main():
 						else:
 								occupied_total += c['pred_similarity']
 								o_count += 1
-
 						count += 1
+				errors.append(failed * 100 / count)
 				total_count += count
 				total_failed += failed
 				total_failed_t += failed_t
@@ -66,6 +66,8 @@ def main():
 
 				print('err: {} {} {}'.format(failed * 100 / count, count, failed))
 
+		for i, e in enumerate(sorted(errors)):
+				print('{}  {}'.format(i, e))
 		print('Total err: {} {} {}'.format(total_failed * 100 / total_count, total_count, total_failed))
 
 		print('Total err: {} {} {}'.format(total_failed_t * 100 / total_count, total_count, total_failed_t))

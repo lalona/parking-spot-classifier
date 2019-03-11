@@ -64,9 +64,9 @@ def extractInfoFromFile(label_path):
     :return: a list of dictionaries with the information
     """
     directories = label_path.split('\\')
-    dir_parking_lot = directories[6]
-    dir_weather = directories[7]
-    dir_date = directories[8]
+    dir_parking_lot = directories[-4]
+    dir_weather = directories[-3]
+    dir_date = directories[-2]
     if dir_parking_lot == "PUCPR":
         dir_parking_lot = "PUC"
     date_hour = directories[-1].split('.')[0]
@@ -93,6 +93,7 @@ def extractInfoFromFile(label_path):
         }
         # only append the info if is a valid file
         if os.path.isfile(getPathToImage(dictionary)):
+            print(dictionary)
             info.append(dictionary)
         else:
             skipped += 1
@@ -101,7 +102,7 @@ def extractInfoFromFile(label_path):
 
 
 path_labels = "C:\\Eduardo\\ProyectoFinal\\Datasets\\PKLot\\PKLot\\"
-file_name = "pklot_labels.txt"
+file_name = "pklot_labels2.txt"
 
 def main():
     parser = argparse.ArgumentParser(description='Force the save.')

@@ -15,7 +15,7 @@ import os
 from keras.preprocessing.image import ImageDataGenerator, array_to_img, img_to_array, load_img
 from tqdm import tqdm
 
-total_size_training_data = 20000
+total_size_training_data = 32000
 #total_size_testing_data  =  5000
 
 # this is in porcentage
@@ -46,55 +46,48 @@ def main():
 	missing_training_data_occupied = total_size_training_data_occupied - occupied_count
 
 	filename = ntpath.basename(info_filename).split('.')[0]
-	subset_dir = filename + '-{}v-{}nv_dataaug-{}v-{}nv'.format(occupied_count, empty_count, missing_training_data_occupied, missing_training_data_empty)
+	subset_dir = filename + '-{}v-{}nv_short'.format(total_size_training_data_occupied, total_size_training_data_empty)
 	create_subset_directorie(subset_dir)
 
 	print('{} {}'.format(missing_training_data_occupied, missing_training_data_empty))
-	datagen = ImageDataGenerator(width_shift_range=0.1, horizontal_flip=True, rotation_range=90)
 
-	dataug_dir = os.path.join(subset_dir, 'dataaug')
-	dataug_dir, maded = create_subset_directorie(dataug_dir)
+	total_data_occupied = 0
+	total_data_empty = 0
 
-	total_dataaug_occupied = 0
-	total_dataaug_empty = 0
+	train_set_used = []
+	train_set_not_used = []
+	empty_data_removed = 0
+	occupied_data_removed = 0
 	for train_data in tqdm(train_set):
-			img_path = train_data['path']
 			y = train_data['y']
-			if y == '0':
-					if missing_training_data_empty <= 0:
+			if y == '1':
+					if total_data_occupied >= int(total_size_training_data / 2):
+							train_set_not_used.append(train_data)
+							occupied_data_removed += 1
 							continue
-					missing_training_data_empty -= 1
-					total_dataaug_empty += 1
+					total_data_occupied += 1
 			else:
-					if missing_training_data_occupied <= 0:
+					if total_data_empty >= int(total_size_training_data / 2):
+							train_set_not_used.append(train_data)
+							empty_data_removed += 1
 							continue
-					missing_training_data_occupied -= 1
-					total_dataaug_occupied += 1
-			img = load_img(img_path)  # this is a PIL image
-			x = img_to_array(img)  # this is a Numpy array with shape (3, 150, 150)
-			x = x.reshape((1,) + x.shape)  # this is a Numpy array with shape (1, 3, 150, 150)
+					total_data_empty += 1
+			train_set_used.append(train_data)
 
-			for batch in datagen.flow(x, batch_size=1,
-																save_to_dir=dataug_dir, save_prefix=y, save_format='jpeg'):
-					dataaug_subset, total_dataaug = getPathsAndLabelDataaug(dataug_dir, fileext='.jpeg')
-					if total_dataaug < (total_dataaug_occupied + total_dataaug_empty):
-							print('{} {} {}'.format(total_dataaug, total_dataaug_occupied, total_dataaug_empty))
-					else:
-							break
+	print(train_set_used[0])
+	print(train_set_not_used[0])
 
-
-
-	dataaug_subset, total_dataaug = getPathsAndLabelDataaug(dataug_dir, fileext='.jpeg')
-	print(total_dataaug)
-	train_set.extend(dataaug_subset)
-	random.shuffle(train_set)
+	random.shuffle(train_set_used)
 
 	saveSubsetsInfo(subsets=subsets_info, subsets_dir=subset_dir, database=database,
-										extra_info='Training subset complemented with {} vehicles {} and nonvehicles {}'.format('data augmentation', total_dataaug_occupied, total_dataaug_empty))
+									extra_info='Training subset short, this info is not accurate because the training set was modified \n The size of the training set is: {} The removed data is {} empty  {} occupied'.format(
+											total_size_training_data, empty_data_removed, occupied_data_removed))
 
 
-	save_subset(subset=train_set, subsets_dir=subset_dir, type='train')
+	save_subset(subset=train_set_used, subsets_dir=subset_dir, type='train')
+	save_subset(subset=train_set_not_used, subsets_dir=subset_dir, type='train_notused')
 	save_subset(subset=test_set, subsets_dir=subset_dir, type='test')
+
 
 if __name__ == "__main__":
 		main()

@@ -19,7 +19,6 @@ def createErrorFile(test_dir, name_labels, failed_images):
 		if not os.path.isdir(test_dir):
 				os.mkdir(test_dir)
 				print('something')
-
 		with open(err_file, 'w') as outfile:
 				json.dump(failed_images, outfile)
 
@@ -53,9 +52,9 @@ def main():
 				return
 
 		if dataset == 'pklot':
-				images_info_path = 'C:\\Eduardo\\ProyectoFinal\\Proyecto\\ProyectoFinal\\SplittingDataSet\\ReduceDataset\\pklot_labels_reduced_comparing-images_50.txt'
+				images_info_path = 'C:\\Eduardo\\ProyectoFinal\\Proyecto\\ProyectoFinal\\SplittingDataSet\\ReduceDataset\\pklot_labels_reduced_comparing-images_70.txt'
 		else:
-				images_info_path = 'C:\\Eduardo\\ProyectoFinal\\Proyecto\\ProyectoFinal\\SplittingDataSet\\ReduceDataset\\cnrpark_labels_reduced_comparing-images_50.txt'
+				images_info_path = 'C:\\Eduardo\\ProyectoFinal\\Proyecto\\ProyectoFinal\\SplittingDataSet\\ReduceDataset\\cnrpark_labels_reduced_comparing-images_70.txt'
 
 		with open(images_info_path, "rb") as fp:   # Unpickling
 				images_info_reduced = pickle.load(fp)
