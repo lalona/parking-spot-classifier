@@ -9,10 +9,11 @@ import numpy as np
 import argparse
 import os
 import json
-from all_models import getModel
+#from all_models import getModel
+from all_parkingnets import getModel
 from datetime import datetime
 import pandas as pd
-from keras.callbacks import CSVLogger, Callback
+from keras.callbacks import CSVLogger, Callback, ModelCheckpoint
 import keras.backend as K
 import csv
 
@@ -20,8 +21,8 @@ IMAGE_HEIGHT = 200
 IMAGE_WIDTH = 200
 IMAGE_CHANNEL = 3
 NUM_CLASSES = 2
-EPOCHS = 2
-INIT_LR = 1e-3
+EPOCHS = 4
+INIT_LR = 1e-1
 BATCH_SIZE = 256
 
 learning_rates = []
@@ -66,7 +67,7 @@ def main():
 		create_net = getModel(net_model)
 		model, architecture_name = create_net(width=IMAGE_HEIGHT, height=IMAGE_WIDTH, depth=IMAGE_CHANNEL, classes=NUM_CLASSES)
 
-		opt = Adam(lr=INIT_LR, beta_1=0.9, beta_2=0.999, epsilon=10e-8, decay=0.05)
+		opt = Adam(lr=INIT_LR, beta_1=0.9, beta_2=0.999, epsilon=10e-8)
 
 		model.compile(loss="binary_crossentropy", optimizer=opt, metrics=["accuracy"])
 
@@ -85,7 +86,11 @@ def main():
 		print("[INFO] training network...")
 		print(model.summary())
 		printlr = PrintLR()
-		callbacks = [CSVLogger(filename=csv_log_path, separator=',', append=False), printlr]#, history, lrate]
+		model_check_point = ModelCheckpoint(
+				os.path.join(train_results_direcotry, 'weights.{epoch:02d}-{val_loss:.2f}.model'), monitor='val_loss',
+				verbose=0, save_best_only=False,
+				save_weights_only=False, mode='auto', period=1)
+		callbacks = [CSVLogger(filename=csv_log_path, separator=',', append=False), printlr, model_check_point]
 		STEP_SIZE_TRAIN = train_generator.n // train_generator.batch_size
 		STEP_SIZE_VALID = test_generator.n // test_generator.batch_size
 		H = model.fit_generator(generator=train_generator,

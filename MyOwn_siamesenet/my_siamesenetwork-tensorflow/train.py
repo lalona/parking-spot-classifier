@@ -8,14 +8,16 @@ from dataset import ParkinglotDataset
 from model import mnist_model, contrastive_loss
 import argparse
 from tqdm import tqdm
-
+import json
 flags = tf.app.flags
 FLAGS = flags.FLAGS
-flags.DEFINE_integer('batch_size', 50, 'Batch size.')
-flags.DEFINE_integer('train_iter', 2100, 'Total training iter')
+flags.DEFINE_integer('batch_size', 52, 'Batch size.')
+flags.DEFINE_integer('train_iter', 1400, 'Total training iter')
 flags.DEFINE_integer('step', 1, 'Save after ... iteration')
 flags.DEFINE_string('dataset', None, 'Path to the directory containing dataset of training and tests')
 flags.DEFINE_string('model', 'mnist', 'model to run')
+
+loss_hisotry = []
 
 if __name__ == "__main__":
 
@@ -23,7 +25,7 @@ if __name__ == "__main__":
 		if FLAGS.model == 'mnist':
 				dataset = ParkinglotDataset(FLAGS.dataset)
 				model = mnist_model
-				placeholder_shape = [None] + list((200, 200, 3))
+				placeholder_shape = [None] + list((224, 224, 3))
 
 				print("placeholder_shape", placeholder_shape)
 				colors = ['#ff0000', '#ffff00', '#00ff00', '#00ffff', '#0000ff', '#ff00ff', '#990000', '#999900', '#009900',
@@ -41,6 +43,7 @@ if __name__ == "__main__":
 		margin = 0.7
 		left_output = model(left, reuse=False)
 		right_output = model(right, reuse=True)
+		#loss = tf.contrib.losses.metric_learning.contrastive_loss(label_float, left_output, right_output, margin=1.0)
 		loss = contrastive_loss(left_output, right_output, label_float, margin)
 
 		# Setup Optimizer
@@ -56,6 +59,7 @@ if __name__ == "__main__":
 
 		# Start Training
 		saver = tf.train.Saver()
+		info = {'dataset': FLAGS.dataset}
 		with tf.Session() as sess:
 				sess.run(tf.global_variables_initializer())
 
@@ -75,6 +79,7 @@ if __name__ == "__main__":
 																				 feed_dict={left: batch_left, right: batch_right, label: batch_similarity})
 
 						writer.add_summary(summary_str, i)
+						loss_hisotry.append(str(l))
 						print("\r#%d - Loss" % i, l)
 
 						"""
@@ -94,7 +99,9 @@ if __name__ == "__main__":
 						"""
 
 				saver.save(sess, "model/model.ckpt")
-
+		info['loss_history'] = loss_hisotry
+		with open('info.json', 'w') as outfile:
+				json.dump(info, outfile)
 
 
 

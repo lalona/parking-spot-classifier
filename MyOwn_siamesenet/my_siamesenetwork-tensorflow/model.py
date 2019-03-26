@@ -14,13 +14,13 @@ def mnist_model(input, reuse=False):
 				with tf.variable_scope("conv1") as scope:
 						net = tf.contrib.layers.conv2d(input, 8, [7, 7], activation_fn=tf.nn.relu, padding='SAME',
 																					 weights_initializer=tf.contrib.layers.xavier_initializer_conv2d(),
-																					 scope=scope, reuse=reuse)
+																					 scope=scope, reuse=reuse, stride=2)
 						net = tf.contrib.layers.max_pool2d(net, [2, 2], padding='SAME')
 
 				with tf.variable_scope("conv2") as scope:
 						net = tf.contrib.layers.conv2d(net, 16, [5, 5], activation_fn=tf.nn.relu, padding='SAME',
 																					 weights_initializer=tf.contrib.layers.xavier_initializer_conv2d(),
-																					 scope=scope, reuse=reuse)
+																					 scope=scope, reuse=reuse, stride=2)
 						net = tf.contrib.layers.max_pool2d(net, [2, 2], padding='SAME')
 
 				with tf.variable_scope("conv3") as scope:
@@ -36,7 +36,7 @@ def mnist_model(input, reuse=False):
 						net = tf.contrib.layers.max_pool2d(net, [2, 2], padding='SAME')
 
 				with tf.variable_scope("conv5") as scope:
-						net = tf.contrib.layers.conv2d(net, 4, [1, 1], activation_fn=None, padding='SAME',
+						net = tf.contrib.layers.conv2d(net, 32, [1, 1], activation_fn=None, padding='SAME',
 																					 weights_initializer=tf.contrib.layers.xavier_initializer_conv2d(),
 																					 scope=scope, reuse=reuse)
 						net = tf.contrib.layers.max_pool2d(net, [2, 2], padding='SAME')

@@ -18,7 +18,7 @@ import msvcrt as m
 IMG_HEIGHT = 200
 IMG_WIDTH = 200
 
-#python test_network101.py -m C:\Eduardo\ProyectoFinal\Proyecto\ProyectoFinal\Train\test_folder\02-28\cnrpark_labels_reduced_comparing-images_70-15576v-13918nv_complementary-mio-td-1924v-3582nv_mgv8\parking_classification.model -d C:\Eduardo\ProyectoFinal\Proyecto\ProyectoFinal\MyOwn_siamesenet\dataset_comp_pklot_labels_reduced_comparing-images_50.json
+#python test_network101.py -m C:\Eduardo\ProyectoFinal\Proyecto\ProyectoFinal\Train\test_folder\02-28\cnrpark_labels_reduced_comparing-images_70-15576v-13918nv_complementary-mio-td-1924v-3582nv_mgv8\parking_classification.model -d C:\Eduardo\ProyectoFinal\Proyecto\ProyectoFinal\MyOwn_siamesenet\dataset_comp_pklot_labels_reduced_comparing-images_70.json
 
 
 def createErrorFile(test_dir, name_labels, failed_images, distance_param, layer_name):

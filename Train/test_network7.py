@@ -1,4 +1,8 @@
-from keras.preprocessing.image import img_to_array
+"""
+Este es igual al 5 solo que ya lee las imagenes bien
+"""
+
+from keras.preprocessing.image import img_to_array, load_img
 from keras.models import load_model
 import numpy as np
 import argparse
@@ -84,18 +88,18 @@ def test(images_info_path, model_path, dim, database):
 				getImagePath = getImagePathCnrpark
 
 		for image_info in tqdm(images_info_reduced):
+				batch_x = np.zeros((1,) + (dim, dim, 3), dtype='float32')
 				path_image = getImagePath(image_info)
 				# load the image
-				image = cv2.imread(path_image)
 
 				# pre-process the image for classification
-				image = cv2.resize(image, (dim, dim))
-				image = image.astype("float") / 255.0
-				image = img_to_array(image)
-				image = np.expand_dims(image, axis=0)
+				img = load_img(path_image, color_mode='rgb', target_size=(dim, dim), interpolation='nearest')
+				x = img_to_array(img, data_format='channels_last')
+				x *= (1. / 255.)
+				batch_x[0] = x
 
 				# classify the input image
-				(empty, ocuppied) = model.predict(image)[0]
+				(empty, ocuppied) = model.predict(batch_x)[0]
 
 				# build the label
 				label = "Occupied" if ocuppied > empty else "Empty"
@@ -163,11 +167,12 @@ def main():
 				return
 
 		for experiment in experiments:
-			print('Testing {}'.format(experiment))
+			print('Testing {} on pklot'.format(experiment))
 			model_path = os.path.join(experiment_dir, experiment, 'parking_classification.model')
 			test(images_info_path_pklot, model_path, dim, 'pklot')
 
 		for experiment in experiments:
+			print('Testing {} on cnrpark'.format(experiment))
 			model_path = os.path.join(experiment_dir, experiment, 'parking_classification.model')
 			test(images_info_path_cnrpark, model_path, dim, 'cnrpark')
 

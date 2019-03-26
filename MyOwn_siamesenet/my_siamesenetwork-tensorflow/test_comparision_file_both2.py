@@ -42,7 +42,9 @@ def main():
 
 		comparission_dir = args["comparission_dir"]
 
-		comparission_occupied_file = os.path.join(comparission_dir, 'comparision_coccupied_images_info_dataset_compoccupied_pklot_labels_reduced_comparing-images_50.txt')
+		#comparission_occupied_file = os.path.join(comparission_dir, 'comparision_coccupied_images_info_dataset_compoccupied_pklot_labels_reduced_comparing-images_50.txt')
+		comparission_occupied_file = os.path.join(comparission_dir,
+																							'comparision_images_info_dataset_compoccupied_pklot_labels_reduced_comparing-images_50.txt')
 		comparission_empty_file = os.path.join(comparission_dir,
 																							'comparision_images_info_dataset_pklot_labels_reduced_comparing-images_50.txt')
 
@@ -90,19 +92,18 @@ def main():
 								failed_same += 1
 						if occupied_pred_value <= empty_pred_value and occupied_c['similarity'] == 1:
 								failed_same += 1
-						if count 1000:
-								print('Total err same: {} {} {}'.format(total_failed_same * 100 / total_count, total_count,
-																												total_failed_same))
+
 						#if not occupied_prediction_check and not empty_prediction_check:
 						#		failed_same += 1
-
-
-
 
 				total_count += count
 				total_failed_empty += failed_empty
 				total_failed_occupied += failed_occupied
 				total_failed_same += failed_same
+				if (failed_same * 100 / count) > 10.0:
+						print('Total err same: {} {} {}'.format(failed_same * 100 / count, count,
+																										failed_same))
+
 
 				#print('err: {} {} {}'.format(failed * 100 / count, count, failed))
 

@@ -63,7 +63,7 @@ def main():
 		# Mostrar en una ventana el espacio vacio y en la otra la comparacion y el resultado
 
 
-		dataset, dataset_name = getDatasetCar(images_info_by_patkinglot, specific_database=specific_database)
+		dataset, dataset_name = getDataset(images_info_by_patkinglot, specific_database=specific_database)
 
 		with open(dataset_name, 'w') as outfile:
 				json.dump(dataset, outfile)

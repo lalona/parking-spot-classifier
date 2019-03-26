@@ -15,7 +15,7 @@ import os
 from keras.preprocessing.image import ImageDataGenerator, array_to_img, img_to_array, load_img
 from tqdm import tqdm
 
-total_size_training_data = 32000
+total_size_training_data = 1000
 #total_size_testing_data  =  5000
 
 # this is in porcentage

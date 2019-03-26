@@ -8,7 +8,7 @@ from keras.layers.core import Dense
 from keras import backend as K
 from keras.layers import Dropout
 
-class mAlexNet:
+class siamesenet:
 	@staticmethod
 	def build(width, height, depth, classes):
 		# initialize the model
@@ -37,19 +37,28 @@ class mAlexNet:
 		n.fc5 = L.InnerProduct(n.relu4, num_output=self.params['num_output'], **fc_defaults)
 		"""
 		# first set of CONV => RELU => POOL layers
-		model.add(Conv2D(16, kernel_size=(11, 11), strides=(4, 4), padding="same", input_shape=inputShape))
+		model.add(Conv2D(8, kernel_size=(7, 7), strides=(1, 1), padding="same", input_shape=inputShape, kernel_initializer='glorot_normal'))
 		model.add(Activation("relu"))
-		model.add(MaxPooling2D(pool_size=(3, 3), strides=(2, 2)))
+		model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
+
+		model.add(Conv2D(16, kernel_size=(5, 5), strides=(1, 1), padding="same", input_shape=inputShape,
+										 kernel_initializer='glorot_normal'))
+		model.add(Activation("relu"))
+		model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
 
 		# second set of CONV => RELU => POOL layers
-		model.add(Conv2D(20, (5, 5), strides=(1, 1), padding="same"))
+		model.add(Conv2D(32, (3, 3), strides=(1, 1), padding="same", kernel_initializer='glorot_normal'))
 		model.add(Activation("relu"))
-		model.add(MaxPooling2D(pool_size=(3, 3), strides=(2, 2)))
+		model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
 
 		# third set of CONV => RELU => POOL layers
-		model.add(Conv2D(30, (3, 3), strides=(1, 1), padding="same"))
+		model.add(Conv2D(64, (1, 1), strides=(1, 1), padding="same", kernel_initializer='glorot_normal'))
 		model.add(Activation("relu"))
-		model.add(MaxPooling2D(pool_size=(3, 3), strides=(2, 2)))
+		model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
+
+		model.add(Conv2D(4, (1, 1), strides=(1, 1), padding="same", kernel_initializer='glorot_normal'))
+		model.add(Activation("relu"))
+		model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
 
 
 		# first (and only) set of FC => RELU layers
@@ -63,4 +72,4 @@ class mAlexNet:
 		model.add(Activation("softmax"))
 
 		# return the constructed network architecture
-		return [model, 'malexnet']
+		return [model, 'siamesenet']

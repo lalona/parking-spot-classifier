@@ -10,7 +10,7 @@ import random
 import argparse
 from keras.preprocessing.image import load_img, img_to_array
 
-IMG_DIM = 200
+IMG_DIM = 224
 
 def getImage(img_path):
 		img = load_img(img_path, target_size=(IMG_DIM, IMG_DIM))
@@ -78,6 +78,8 @@ class ParkinglotDataset(Dataset):
 		print("===Loading MNIST Dataset===")
 		df_train = pd.read_csv(os.path.join(dataset_directory, 'data_paths_train.csv'))
 		df_test = pd.read_csv(os.path.join(dataset_directory, 'data_paths_test.csv'))
+		self.size_training = df_train['path'].sum()
+
 		map_train = getMapLabel(df_train)
 		map_test = getMapLabel(df_test)
 

@@ -25,35 +25,38 @@ def createErrorFile(test_dir, dataset_tested, failed_images):
 		with open(err_file, 'w') as outfile:
 				json.dump(failed_images, outfile)
 
-def main():
-		# construct the argument parse and parse the arguments
-		ap = argparse.ArgumentParser()
-		ap.add_argument("-m", "--model", required=True,
-										help="path to trained model model")
-		ap.add_argument("-dim", "--dimension", type=int, required=True,
-										help='The size of width and height.')
-		ap.add_argument("-d", "--dataset", type=str, required=True,
-										help='It can be pklot or cnrpark.')
 
-		args = vars(ap.parse_args())
-
-		dataset = args['dataset']
-
-		dim = args['dimension']
-
-		if dataset != 'pklot' and dataset != 'cnrpark':
-				print('The dataset can only be pklot o cnrpark')
-				return
-
-		if dataset == 'pklot':
-				dataset_directory = 'C:\\Eduardo\\ProyectoFinal\\Proyecto\\ProyectoFinal\\Train\\subsets\\test_only\\pklot_labels_reduced_comparing-images_70'
+def errorFileExists(test_dir, dataset_tested):
+		err_file = os.path.join(os.getcwd(), test_dir, 'real_error_info_{}.txt'.format(dataset_tested))
+		if len(err_file) >= 259:
+				err_file = "\\\\?\\" + err_file
+		if not os.path.isdir(test_dir):
+				os.mkdir(test_dir)
+		if os.path.isfile(err_file):
+				with open(err_file, 'r') as outfile:
+						errors = json.load(outfile)
+				if len(errors['failed_images']) > 10:
+						return (True, err_file)
+				else:
+						return (False, err_file)
 		else:
-				dataset_directory = 'C:\\Eduardo\\ProyectoFinal\\Proyecto\\ProyectoFinal\\Train\\subsets\\test_only\\cnrpark_labels_reduced_comparing-images_70'
+				return (False, err_file)
+
+
+def test(model_path, dataset_directory, dim):
+
+		dataset_tested = os.path.basename(os.path.normpath(dataset_directory))
+		model_onlypath, model_filename = os.path.split(model_path)
+		test_dir = os.path.join(model_onlypath, 'test_info')
+		err_file_exists, err_file = errorFileExists(test_dir, dataset_tested)
+
+		if err_file_exists:
+				print('The test was already made {}'.format(err_file))
+				return
 
 		# load the trained convolutional neural network
 		print("[INFO] loading network...")
-		model_path = args["model"]
-		model = load_model(model_path,custom_objects={'PoolHelper': PoolHelper})
+		model = load_model(model_path)
 
 		df_test = pd.read_csv(os.path.join(dataset_directory, 'data_paths_test.csv'))
 		test_datagen = ImageDataGenerator(rescale=1. / 255.)
@@ -88,7 +91,7 @@ def main():
 		for (index, row) in df_test.iterrows():
 				pred = filenames_predictions[row['path']]
 				if row['y'] != pred:
-						failed_images.append(row['path'])
+						failed_images.append({'file': row['path'], 'state': row['y']})
 						error_count += 1
 				count += 1
 				if count >= 1000:
@@ -98,24 +101,49 @@ def main():
 		test_stadistics['failed_images'] = failed_images
 		test_stadistics['error_por'] = (len(failed_images) * 100) / len(predictions)
 
-		dataset_tested = os.path.basename(os.path.normpath(dataset_directory))
-		model_onlypath, model_filename = os.path.split(model_path)
-		test_dir = os.path.join(model_onlypath, 'test_info')
+
 		createErrorFile(test_dir, dataset_tested, test_stadistics)
 
-class PoolHelper(Layer):
 
-		def __init__(self, **kwargs):
-				super(PoolHelper, self).__init__(**kwargs)
+def main():
+		# construct the argument parse and parse the arguments
+		ap = argparse.ArgumentParser()
+		ap.add_argument("-e", "--experiment-dir", required=True,
+										help="The path to the experiment dir.")
 
-		def call(self, x, mask=None):
-				return x[:, 1:, 1:]
+		dataset_directory_pklot = 'C:\\Eduardo\\ProyectoFinal\\Proyecto\\ProyectoFinal\\Train\\subsets\\test_only\\pklot_labels_reduced_comparing-images_70'
+		dataset_directory_cnrpark = 'C:\\Eduardo\\ProyectoFinal\\Proyecto\\ProyectoFinal\\Train\\subsets\\test_only\\cnrpark_labels_reduced_comparing-images_70'
 
-		def get_config(self):
-				config = {}
-				base_config = super(PoolHelper, self).get_config()
-				return dict(list(base_config.items()) + list(config.items()))
+		args = vars(ap.parse_args())
 
+		experiment_dir = args['experiment_dir']
+
+		experiment_specs_training_params_path = os.path.join(experiment_dir, 'training_params.json')
+
+		if os.path.isfile(experiment_specs_training_params_path):
+				with open(os.path.join(experiment_specs_training_params_path), 'r') as outfile:
+						training_params = json.load(outfile)
+		else:
+				print('You need to run the training first.')
+				return
+
+		dim = training_params['dim']
+
+		experiments = [name for name in os.listdir(experiment_dir) if os.path.isdir(os.path.join(experiment_dir, name))]
+
+		if len(experiments) == 0:
+				print('You need to run the training first.')
+				return
+
+		for experiment in experiments:
+				print('Testing {}'.format(experiment))
+				model_path = os.path.join(experiment_dir, experiment, 'parking_classification.model')
+				test(model_path, dataset_directory_pklot, dim)
+
+		for experiment in experiments:
+				print('Testing {}'.format(experiment))
+				model_path = os.path.join(experiment_dir, experiment, 'parking_classification.model')
+				test(model_path, dataset_directory_cnrpark, dim)
 
 if __name__ == "__main__":
 		main()

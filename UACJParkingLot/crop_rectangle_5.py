@@ -176,7 +176,9 @@ class CropRectangles():
         self.rate_angle_change = 5
 
         height, width, channels = image.shape
+        self.img_width = int(width / scale)
         self.imS = cv2.resize(image, (int(width / scale), int(height / scale)))
+
         self.imSrotation = self.imS.copy()
         self.imSHelp = self.imS.copy()
         self.imSclean = self.imS.copy()
@@ -352,10 +354,12 @@ class CropRectangles():
             self.imSHelp = self.imSclean
             self.imSclean = self.imSclean.copy()
             initial_height = 30
+            final_height = 30 * len(functionalaty)
+            cv2.rectangle(self.imSHelp, (0, 0), (self.img_width, final_height + 10), (255, 255, 255), cv2.FILLED)
             for f in functionalaty:
                 help = '{}: {}'.format(f['key'], f['function'])
                 cv2.putText(self.imSHelp, help, (10, initial_height), cv2.FONT_HERSHEY_SIMPLEX, 1,
-                            (255, 153, 0), 1, cv2.LINE_AA)
+                            (153, 0, 0), 1, cv2.LINE_AA)
                 initial_height += 30
             self.refPt = []
             self.count = 0
@@ -457,9 +461,9 @@ def main():
                     default='29_07\\image28-11-2018_19-19-19.jpg')
     ap.add_argument("-s", "--scale", required=False, default=3, help="The scale where the image can be better managed")
     args = vars(ap.parse_args())
-    # uacj_images_path = 'C:\\Eduardo\\ProyectoFinal\\Pruebas_UACJ'
+    uacj_images_path = 'C:\\Eduardo\\ProyectoFinal\\Pruebas_UACJ'
     scale = float(args['scale'])
-    uacj_images_path = 'C:\\Eduardo\\tesis\\datasets\\uacj'
+    #uacj_images_path = 'C:\\Eduardo\\tesis\\datasets\\uacj'
     image_path = os.path.join(uacj_images_path, args["image"])
     images_path = get_images_path(uacj_images_path)
     image_path = images_path[0]
