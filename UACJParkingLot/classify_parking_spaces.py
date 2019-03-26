@@ -309,6 +309,12 @@ class DefineStates():
         self.states = last_states
         self.drawMap(clean=True)
 
+    def repeatOnlyUnassignedStates(self, last_states):
+        for s in last_states:
+            if not any(d['id'] == s['id'] for d in self.states):
+                self.states.append(s)
+        self.drawMap(clean=True)
+
     def saveStates(self):
         with open(self.getStatesFilename(), 'w') as filehandle:
             json.dump(self.states, filehandle)
@@ -334,6 +340,8 @@ def setFunctionality(define_states, last_states):
         {'key': 'h', '_callback': define_states.showHelp, 'function': 'Muestra la funcionalidad.'},
         {'key': 's', '_callback': define_states.saveStates, 'function': 'Guarda los estados.'},
         {'key': 'c', '_callback': define_states.repeatStates, 'param': last_states, 'function': 'Pone los estados igual que la imagen pasada.'},
+        {'key': 'u', '_callback': define_states.repeatOnlyUnassignedStates, 'param': last_states,
+         'function': 'Pone los estados igual que la imagen pasada.'},
         {'key': 'b', 'function': 'Muestra la imagen anterior.'},
         {'key': 'n', 'function': 'Muestra la siguiente imagen.'},
         {'key': 'x', 'function': 'Guarda el mapa y sale del programa.'},
@@ -345,7 +353,7 @@ def main():
     # construct the argument parser and parse the arguments
     ap = argparse.ArgumentParser()
     ap.add_argument("-s", "--scale", required=False, default=3, help="The scale where the image can be better managed")
-    ap.add_argument("-i", "--image", required=False, default=3, help="Initial image")
+    ap.add_argument("-i", "--image", required=True, help="Initial image")
     args = vars(ap.parse_args())
     scale = float(args['scale'])
     initial_image = args['image']
