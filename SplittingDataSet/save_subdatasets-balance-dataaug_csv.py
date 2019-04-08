@@ -82,8 +82,6 @@ def main():
 					else:
 							break
 
-
-
 	dataaug_subset, total_dataaug = getPathsAndLabelDataaug(dataug_dir, fileext='.jpeg')
 	print(total_dataaug)
 	train_set.extend(dataaug_subset)

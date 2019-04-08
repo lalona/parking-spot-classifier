@@ -18,6 +18,7 @@ import os
 import pickle
 import argparse
 from operator import itemgetter
+import constants.databases_info as c
 
 def extractInfoFromSpace(el_space, filepath, date_hour):
     """
@@ -57,7 +58,7 @@ def getPathToImage(image_info):
     return path
 
 
-def extractInfoFromFile(label_path):
+def extractInfoFromFilePKLot(label_path):
     """
     This will extract the information from the file and store it in a list of dictionaries
     :param file: a xml file containing the info e.g. "C:\Eduardo\ProyectoFinal\Datasets\PKLot\PKLot\PUCPR\Rainy\2012-11-09\2012-11-09_19_37_09.xml"
@@ -82,14 +83,13 @@ def extractInfoFromFile(label_path):
             continue
         space_path, file_name, id, occupied = extractInfoFromSpace(el_space, spaces_path, date_hour)
         dictionary = {
-            'filepath': space_path,
-            'filename': file_name,
-            'weather': dir_weather,
-            'date': date,
-            'hour': hour,
-						'parkinglot': dir_parking_lot,
-            'space': id,
-            'state': occupied
+            c.db_json_filepath: os.path.join(space_path, file_name),
+            c.db_json_weather: dir_weather,
+            c.db_json_date: date,
+            c.db_json_hour: hour,
+            c.db_json_parkinglot_camera: dir_parking_lot,
+            c.db_json_space: id,
+            c.db_json_state: occupied
         }
         # only append the info if is a valid file
         if os.path.isfile(getPathToImage(dictionary)):
@@ -100,41 +100,105 @@ def extractInfoFromFile(label_path):
             continue
     return skipped, info
 
-
-path_labels = "C:\\Eduardo\\ProyectoFinal\\Datasets\\PKLot\\PKLot\\"
-file_name = "pklot_labels2.txt"
-
-def main():
-    parser = argparse.ArgumentParser(description='Force the save.')
-    parser.add_argument("-f", "--force", type=bool, default=False, help='If the file was already made, still make it')
-    args = vars(parser.parse_args())
-
-    force_creation = args["force"]
-
-    if os.path.isfile(file_name) and not force_creation:
-        print('The file was already created if you want to repeat the process you can set the param -f to True')
-        return
-
+def getAllImagesInfoPKLot():
     images_info = []
     file_skipped = []
     skipped = 0
     # For each .xml file extract the info from that file
-    for subdir, dirs, files in os.walk(path_labels):
+    for subdir, dirs, files in os.walk(c.pklot_labels_path):
         for file in files:
             if file.endswith('.xml'):
-                s, info = extractInfoFromFile(os.path.join(subdir, file))
+                s, info = extractInfoFromFilePKLot(os.path.join(subdir, file))
                 if s > 30:
                     file_skipped.append(os.path.join(subdir, file))
                 skipped += s
                 images_info.extend(info)
         print(subdir)
     print("Total of images info extracted: {} and a total of {} was skiped".format(len(images_info), skipped))
+    return images_info
+
+
+def extractInfoFromLineCNRPark(label):
+    """
+		Extract the information from label files and puts it in a dictionary
+		:param label: It has to came in the next format:
+		[weather]/[date]/[camera]/[file name] [state]
+		RAINY/2016-02-12/camera1/R_2016-02-12_09.10_C01_191.jpg 1
+		:return: A dictionary with the information extracted
+		"""
+    patch_path = label[:-3]
+    patch_path_separated = patch_path.split("/")
+    patch_info_separated = patch_path_separated[3].split("_")
+    space = patch_info_separated[4].split(".")[0]
+    state = label[-2]
+    return {
+        c.db_json_filepath: label[:-3],
+        c.db_json_parkinglot_camera: patch_path_separated[2],
+        c.db_json_weather: patch_path_separated[0],
+        c.db_json_date: patch_path_separated[1],
+        c.db_json_hour: patch_info_separated[2],
+        c.db_json_space: space,
+        c.db_json_state: state
+    }
+
+
+def getAllImagesInfoCNRPark():
+    """
+		This will return a list of dictionares where each dictionary contains the info
+		for each file
+		Important consideration: it only read the camera .txt files.
+		:param labels_files_directory: The path to the directory of the .txt files that contain all the image info
+		:return: list of dictionaries with the image info
+		"""
+    # This filters the files to only open the camera files
+    camera_label_files = [open(os.path.join(c.cnrparkext_labels_path, file_name), "r") for file_name in
+                          os.listdir(c.cnrparkext_labels_path) if file_name.startswith("camera")]
+    images_info = []
+    for label_file in camera_label_files:
+        for label in label_file:
+            images_info.append(extractInfoFromLineCNRPark(label))
+    return images_info
+
+
+def main():
+    # construct the argument parse and parse the arguments
+    ap = argparse.ArgumentParser()
+    ap.add_argument("-d", "--database", required=True,
+                    help="It can be cnrpark or pklot.")
+    ap.add_argument("-s", "--save-to", required=True,
+                    help="The dir to save the resulting file.")
+    ap.add_argument("-f", "--force", required=False, default=False,
+                    help="Even if the files was already created for the creation.")
+
+    args = vars(ap.parse_args())
+
+    database = args['database']
+    if database != 'cnrpark' or database != 'pklot':
+        print('The database it can be only cnrpark or pklot')
+        return
+    save_to_dir = args['save_to']
+    force = args['force']
+
+    if database == 'cnrpark':
+        labels_pickle = os.path.join(save_to_dir, c.cnrparkext_labels_pickle)
+        getImagesInfo = getAllImagesInfoCNRPark
+    elif database == 'pklot':
+        labels_pickle = os.path.join(save_to_dir, c.pklot_labels_pickle)
+        getImagesInfo = getAllImagesInfoPKLot
+
+    if os.path.isfile(labels_pickle):
+        print('The file was already created, you can delete the file if you want to created again')
+        if not force:
+            return
+
+    images_info = getImagesInfo()
 
     # sort the info
-    grouper = itemgetter('parkinglot', 'date', 'space', 'hour')
+    grouper = itemgetter(c.db_json_parkinglot_camera, c.db_json_parkinglot_date, c.db_json_parkinglot_space,
+                         c.db_json_parkinglot_hour)
     images_info = sorted(images_info, key=grouper)
 
-    with open(file_name, "wb") as fp:  # Pickling
+    with open(labels_pickle, "wb") as fp:  # Pickling
         pickle.dump(images_info, fp)
 
     print("SAVED")

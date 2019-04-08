@@ -8,6 +8,9 @@ from tqdm import tqdm
 import msvcrt as m
 import random
 
+import sys
+sys.path.insert(0, "C:\\Eduardo\\ProyectoFinal\\Proyecto\\ProyectoFinal\\constants")
+import databases_info as c
 path_pklot = 'C:\\Eduardo\\ProyectoFinal\\Datasets\\PKLot'
 path_cnrpark = 'C:/Eduardo/ProyectoFinal/Datasets/CNR-EXT/PATCHES'
 def extractUniqueItemsByKey(list, key):
@@ -86,6 +89,31 @@ def getDataset(images_info_by_patkinglot, specific_database):
 								dataset[parkinglot][space].append(info)
 		dataset_name = 'dataset_{}'.format(specific_database)
 		dataset_name += '.json'
+		return (dataset, dataset_name)
+
+def getDatasetComp(images_info_by_patkinglot, specific_database):
+		dataset = {}
+		for parkinglot, images_info_by_spaces in images_info_by_patkinglot.items():
+				dataset[parkinglot] = {}
+				for space, images_info_of_space in images_info_by_spaces.items():
+						dataset[parkinglot][space] = []
+						example_list = images_info_of_space
+						comp = {c.siamesnet_test_comp_comparissions: []}
+						for example in tqdm(example_list):
+								if example['state'] == c.occupied_state:
+										if c.siamesnet_test_comp_occupied not in comp:
+											comp[c.siamesnet_test_comp_occupied] = example
+											if c.siamesnet_test_comp_empty in comp:
+												break
+								elif example['state'] == c.empty_state:
+										if c.siamesnet_test_comp_empty not in comp:
+												comp[c.siamesnet_test_comp_empty] = example
+												if c.siamesnet_test_comp_occupied in comp:
+														break
+						for example in tqdm(example_list):
+								comp[c.siamesnet_test_comp_comparissions].append(example)
+						dataset[parkinglot][space] = comp
+		dataset_name = '{}_comp.json'.format(specific_database)
 		return (dataset, dataset_name)
 
 

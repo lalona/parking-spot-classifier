@@ -20,7 +20,7 @@ import numpy as np
 from tqdm import tqdm
 import ntpath
 import json
-from compare_image_utils import get_images_info_by_parkinglot, getDataset, getDataset2, getDatasetCar
+from compare_image_utils import get_images_info_by_parkinglot, getDatasetComp
 import ntpath
 path_pklot = 'C:\\Eduardo\\ProyectoFinal\\Datasets\\PKLot'
 
@@ -55,7 +55,7 @@ def main():
 			images_info_by_patkinglot = get_images_info_by_parkinglot(info_filename, parkinglot_key='camera', database=database)
 		else:
 			images_info_by_patkinglot = get_images_info_by_parkinglot(info_filename, parkinglot_key='parkinglot',
-							
+
 																																	database=database)
 		# Hasta este punto ya tengo un dictionario dividido por estacionamiento que a su vez se divide por espacios
 
@@ -65,7 +65,7 @@ def main():
 
 
 		#dataset, dataset_name = getDataset(images_info_by_patkinglot, specific_database=specific_database)
-		dataset, dataset_name = getDatasetCar(images_info_by_patkinglot, specific_database=specific_database)
+		dataset, dataset_name = getDatasetComp(images_info_by_patkinglot, specific_database=specific_database)
 
 		with open(dataset_name, 'w') as outfile:
 				json.dump(dataset, outfile)

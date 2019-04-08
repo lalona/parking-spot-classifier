@@ -19,6 +19,7 @@ import ntpath
 from keras.preprocessing.image import img_to_array
 from keras.models import load_model
 import os
+from PIL import Image
 # 'C:\Eduardo\ProyectoFinal\Pruebas_UACJ\30_4\image30-11-2018_14-15-19.jpg'
 # 'C:\Eduardo\ProyectoFinal\Pruebas_UACJ\30_4\image30-11-2018_12-35-19.jpg'
 
@@ -202,43 +203,54 @@ class FindEmptySpaces():
         else:
             self.drawMap(clean=True)
 
-    def classifyMap(self, orig_img):
+    def getSpaceImg(self, orig_img, space):
         height, width, channels = orig_img.shape
+        initial_x = width
+        final_x = 0
+        initial_y = height
+        final_y = 0
+        for point in space['rectangle']:
+            x = point[0]
+            y = point[1]
+            if x < initial_x:
+                initial_x = x
+            if x > final_x:
+                final_x = x
+            if y < initial_y:
+                initial_y = y
+            if y > final_y:
+                final_y = y
+        print('x: {} {} y: {} {}'.format(initial_x, final_x, initial_y, final_y))
+        space_img = orig_img[int(initial_y):int(final_y), int(initial_x):int(final_x)]
+
+        img = Image.fromarray(space_img)
+        if img.mode != 'RGB':
+            img = img.convert('RGB')
+        width_height_tuple = (self.model_input_dim, self.model_input_dim)
+        if img.size != width_height_tuple:
+            img = img.resize(width_height_tuple, Image.NEAREST)
+        return img
+
+    def predict(self, space_img):
+        batch_x = np.zeros((1,) + (self.model_input_dim, self.model_input_dim, 3), dtype='float32')
+        x = img_to_array(space_img, data_format='channels_last')
+        x *= (1. / 255.)
+        batch_x[0] = x
+        # classify the input image
+        return self.model.predict(batch_x)[0]
+
+
+    def classifyMap(self, orig_img):
+        #height, width, channels = orig_img.shape
         clean_img = orig_img.copy()
         for space in self.map:
             orig_img = clean_img
             clean_img = clean_img.copy()
             if space['angle'] > 0:
                 orig_img = imutils.rotate(orig_img, space['angle'])
-            initial_x = width
-            final_x = 0
-            initial_y = height
-            final_y = 0
-            for point in space['rectangle']:
-                x = point[0]
-                y = point[1]
-                if x < initial_x:
-                    initial_x = x
-                if x > final_x:
-                    final_x = x
-                if y < initial_y:
-                    initial_y = y
-                if y > final_y:
-                    final_y = y
-            print('x: {} {} y: {} {}'.format(initial_x, final_x, initial_y, final_y))
-            space_img = orig_img[int(initial_y):int(final_y), int(initial_x):int(final_x)]
-
-            try:
-                space_img = cv2.resize(space_img, (self.model_input_dim, self.model_input_dim))
-            except:
-                continue
-            space_img_orig = space_img.copy()
-            space_img = space_img.astype("float") / 255.0
-            space_img = img_to_array(space_img)
-            space_img = np.expand_dims(space_img, axis=0)
-
+            space_img = self.getSpaceImg(orig_img, space)
             # classify the input image
-            (empty, ocuppied) = self.model.predict(space_img)[0]
+            (empty, ocuppied) = self.predict(space_img)
             if empty > ocuppied:
                 self.states.append({'id': space['id'], 'state': '0'})
                 s = 'empty'
@@ -246,8 +258,8 @@ class FindEmptySpaces():
                 self.states.append({'id': space['id'], 'state': '1'})
                 s = 'occupied'
 
-            cv2.imshow(s, space_img_orig)
-            cv2.waitKey(0)
+            #cv2.imshow(s, space_img_orig)
+            #cv2.waitKey(0)
 
 
     def drawMap(self, clean=False):

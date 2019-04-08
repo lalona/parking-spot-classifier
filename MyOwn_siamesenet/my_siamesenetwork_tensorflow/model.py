@@ -36,7 +36,7 @@ def mnist_model(input, reuse=False):
 						net = tf.contrib.layers.max_pool2d(net, [2, 2], padding='SAME')
 
 				with tf.variable_scope("conv5") as scope:
-						net = tf.contrib.layers.conv2d(net, 32, [1, 1], activation_fn=None, padding='SAME',
+						net = tf.contrib.layers.conv2d(net, 4, [1, 1], activation_fn=None, padding='SAME',
 																					 weights_initializer=tf.contrib.layers.xavier_initializer_conv2d(),
 																					 scope=scope, reuse=reuse)
 						net = tf.contrib.layers.max_pool2d(net, [2, 2], padding='SAME')

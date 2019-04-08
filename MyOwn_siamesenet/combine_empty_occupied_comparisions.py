@@ -2,8 +2,8 @@ import json
 
 def main():
 	# read
-	dataset_compempty_path = 'dataset_pklot_labels_reduced_comparing-images_70.json'
-	dataset_compoccupied_path = 'dataset_compoccupied_pklot_labels_reduced_comparing-images_70.json'
+	dataset_compempty_path = 'dataset_cnrpark_labels_reduced_comparing-images_70.json'
+	dataset_compoccupied_path = 'dataset_compoccupied_cnrpark_labels_reduced_comparing-images_70.json'
 	with open(dataset_compempty_path) as f:
 			dataset_compempty = json.load(f)
 
@@ -18,7 +18,7 @@ def main():
 			for comparission in comparissions_c:
 					dataset_comp[park_e][space_e]['comparissions'].append({'comparing_to': comparission['comparing_to'], 'state': comparission['state']})
 
-	with open('dataset_comp_pklot_labels_reduced_comparing-images_70.json', 'w') as outfile:
+	with open('dataset_comp_cnrpark_labels_reduced_comparing-images_70.json', 'w') as outfile:
 			json.dump(dataset_comp, outfile)
 
 

@@ -15,11 +15,17 @@ from parkingnetv9 import create_parkingnet as pnv9
 from parkingnetv10 import create_parkingnet as pnv10
 from siamese_net import siamesenet
 from siamese_net2 import siamesenet2
+from siamese_net3 import siamesenet3
+from siamese_net4 import siamesenet4
+from siamese_net5 import siamesenet5
 
 mg_nets = [
 		{'model_name': 'malexnet', 'net': mAlexNet.build},
 		{'model_name': 'siamesenet', 'net': siamesenet.build},
 		{'model_name': 'siamesenet2', 'net': siamesenet2.build},
+		{'model_name': 'siamesenet3', 'net': siamesenet3.build},
+		{'model_name': 'siamesenet4', 'net': siamesenet4.build},
+		{'model_name': 'siamesenet5', 'net': siamesenet5.build},
 		{'model_name': 'pnv1', 'net': pnv1},
 		{'model_name': 'pnv1_2', 'net': pnv1_2},
 		{'model_name': 'pnv2', 'net': pnv2},
