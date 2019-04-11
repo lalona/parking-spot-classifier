@@ -104,10 +104,11 @@ def test(dataset_path, dim, experiment_path):
 								failed_images['image_info'].append(data_info['data'])
 						elif dist_empty.ravel()[0] >= dist_occupied.ravel()[0] and int(y) == 0:
 								failed += 1
+								failed_images['image_info'].append(data_info['data'])
 						count += 1
 						if count % 1000 == 0:
 								print('error: {} {} {}'.format(failed * 100 / count, failed, count))
-
+		failed_images['error'] = failed * 100 / count
 		name_labels = ntpath.basename(dataset_path).split('.')[0]
 		createJSONFile(test_dir, name_labels, comparision_values_euclidean, prefix='distances_{}'.format('euclidean'))
 		createJSONFile(test_dir, name_labels, failed_images, prefix='error_info_')
