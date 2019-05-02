@@ -461,9 +461,9 @@ def main():
                     default='29_07\\image28-11-2018_19-19-19.jpg')
     ap.add_argument("-s", "--scale", required=False, default=3, help="The scale where the image can be better managed")
     args = vars(ap.parse_args())
-    uacj_images_path = 'C:\\Eduardo\\ProyectoFinal\\Pruebas_UACJ'
+    #uacj_images_path = 'C:\\Eduardo\\ProyectoFinal\\Pruebas_UACJ'
     scale = float(args['scale'])
-    #uacj_images_path = 'C:\\Eduardo\\tesis\\datasets\\uacj'
+    uacj_images_path = 'C:\\Eduardo\\tesis\\datasets\\uacj'
     image_path = os.path.join(uacj_images_path, args["image"])
     images_path = get_images_path(uacj_images_path)
     image_path = images_path[0]

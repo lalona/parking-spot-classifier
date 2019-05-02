@@ -65,12 +65,9 @@ def showTable(correct_images_by_parkinglot_details_, title, analyzed_file, title
 				nets_ = nets.split(',')
 				net = ''
 				for n in nets_:
-						if n == 'pnv1' and 'pnv10' in analyzed_dir:
-								net = 'pnv10'
-								break
-						else:
-								net = n
-								break
+					if n + '_' in analyzed_dir:
+						net = n
+						break
 				analyzed_file_csv = analyzed_filename.replace('_tested_error_images_info', '')
 				analyzed_file_csv = analyzed_file_csv.replace('_labels_reduced_comparing-images', '')
 				analyzed_file_csv = analyzed_file_csv.replace('.txt', '_{}_{}.csv'.format(net, title))
